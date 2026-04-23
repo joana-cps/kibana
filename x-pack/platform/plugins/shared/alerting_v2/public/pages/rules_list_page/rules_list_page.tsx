@@ -7,7 +7,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  EuiButton,
+  EuiButtonEmpty,
   EuiCallOut,
   EuiFieldSearch,
   EuiFilterGroup,
@@ -15,10 +15,12 @@ import {
   EuiFlexItem,
   EuiPageHeader,
   EuiSpacer,
+  useEuiTheme,
   type Criteria,
 } from '@elastic/eui';
-import { CoreStart, useService } from '@kbn/core-di-browser';
+import { css } from '@emotion/react';
 import { i18n } from '@kbn/i18n';
+import { useService, CoreStart } from '@kbn/core-di-browser';
 import { FormattedMessage } from '@kbn/i18n-react';
 import { useDebouncedValue } from '@kbn/react-hooks';
 import type { FindRulesSortField } from '@kbn/alerting-v2-schemas';
@@ -26,7 +28,8 @@ import type { RuleApiResponse } from '../../services/rules_api';
 import { useFetchRules } from '../../hooks/use_fetch_rules';
 import { useFetchRuleTags } from '../../hooks/use_fetch_rule_tags';
 import { useBreadcrumbs } from '../../hooks/use_breadcrumbs';
-import { paths } from '../../constants';
+import { CreateRuleSplitButton } from './create_rule_split_button';
+import { RulesListEmptyState } from './rules_list_empty_state';
 import { RulesListTableContainer } from './rules_list_table_container';
 import type { RulesListTableSortField } from './rules_list_table';
 import { ModeFilterPopover } from '../../components/rule/popovers/mode_filter_popover';
@@ -47,8 +50,15 @@ const TABLE_FIELD_TO_API_SORT_FIELD = Object.fromEntries(
   Object.entries(SORT_FIELD_TO_TABLE_FIELD).map(([api, table]) => [table, api])
 ) as Partial<Record<string, FindRulesSortField>>;
 
+const emptyStateRootLayout = css`
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+`;
+
 export const RulesListPage = () => {
-  const { basePath } = useService(CoreStart('http'));
+  const { euiTheme } = useEuiTheme();
+  const docLinks = useService(CoreStart('docLinks'));
 
   useBreadcrumbs('rules_list');
 
@@ -110,27 +120,50 @@ export const RulesListPage = () => {
 
   const hasActiveFilters = Boolean(filter);
 
+  const isRichEmpty =
+    !isLoading &&
+    !isError &&
+    (data?.total ?? 0) === 0 &&
+    !debouncedSearch &&
+    !hasActiveFilters;
+
+  const emptyStateShellCss = useMemo(
+    () => css`
+      /* Centers the empty-state *section* (the bordered panel) in the viewport, without stretching it */
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100dvh - 10rem);
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 ${euiTheme.size.m};
+    `,
+    [euiTheme.size.m]
+  );
+
   return (
-    <div>
+    <div css={isRichEmpty ? emptyStateRootLayout : undefined}>
       <EuiPageHeader
         pageTitle={
-          <FormattedMessage
-            id="xpack.alertingV2.rulesList.pageTitle"
-            defaultMessage="Alerting V2 Rules"
-          />
+          <FormattedMessage id="xpack.alertingV2.rulesList.pageTitle" defaultMessage="Rules" />
         }
         rightSideItems={[
-          <EuiButton
-            key="create-rule"
-            fill
-            href={basePath.prepend(paths.ruleCreate)}
-            data-test-subj="createRuleButton"
+          <CreateRuleSplitButton key="create-rule" />,
+          <EuiButtonEmpty
+            key="docs"
+            iconType="documentation"
+            size="m"
+            href={docLinks.links.alerting.guide}
+            target="_blank"
+            data-test-subj="rulesListDocumentation"
           >
             <FormattedMessage
-              id="xpack.alertingV2.rulesList.createRuleButton"
-              defaultMessage="Create rule"
+              id="xpack.alertingV2.rulesList.documentation"
+              defaultMessage="Documentation"
             />
-          </EuiButton>,
+          </EuiButtonEmpty>,
         ]}
       />
       <EuiSpacer size="m" />
@@ -152,7 +185,12 @@ export const RulesListPage = () => {
           <EuiSpacer />
         </>
       ) : null}
-      {!isError ? (
+      {!isError && isRichEmpty ? (
+        <div css={emptyStateShellCss} data-test-subj="rulesListEmptyStateShell">
+          <RulesListEmptyState />
+        </div>
+      ) : null}
+      {!isError && !isRichEmpty ? (
         <>
           <EuiFlexGroup gutterSize="s">
             <EuiFlexItem>

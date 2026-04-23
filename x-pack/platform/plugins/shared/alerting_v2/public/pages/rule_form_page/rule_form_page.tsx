@@ -7,6 +7,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 import {
+  EuiButton,
   EuiCallOut,
   EuiLoadingSpinner,
   EuiPageHeader,
@@ -21,6 +22,9 @@ import type { LensPublicStart } from '@kbn/lens-plugin/public';
 import { FormattedMessage } from '@kbn/i18n-react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@kbn/react-query';
+import { DISCOVER_APP_LOCATOR } from '@kbn/deeplinks-analytics';
+import type { DiscoverAppLocatorParams } from '@kbn/discover-plugin/common';
+import type { SharePluginStart } from '@kbn/share-plugin/public';
 import { StandaloneRuleForm, mapRuleResponseToFormValues } from '@kbn/alerting-v2-rule-form';
 import type { FormValues } from '@kbn/alerting-v2-rule-form';
 import { i18n } from '@kbn/i18n';
@@ -28,6 +32,7 @@ import { useFetchRule } from '../../hooks/use_fetch_rule';
 import { ruleKeys } from '../../hooks/query_key_factory';
 import { useBreadcrumbs } from '../../hooks/use_breadcrumbs';
 import { paths } from '../../constants';
+import { useRuleListCreationActions } from '../rules_list_page/use_rule_list_creation_actions';
 
 const DEFAULT_QUERY = 'FROM logs-*\n| LIMIT 1';
 
@@ -136,7 +141,58 @@ const RuleFormPageContent = ({ ruleId, initialQuery, initialValues }: RuleFormPa
   const data = useService(PluginStart('data')) as DataPublicPluginStart;
   const dataViews = useService(PluginStart('dataViews')) as DataViewsPublicPluginStart;
   const lens = useService(PluginStart('lens')) as LensPublicStart;
+  const share = useService(PluginStart('share')) as SharePluginStart;
   const queryClient = useQueryClient();
+
+  const { canCreateInDiscover, openCreateInDiscover } = useRuleListCreationActions();
+
+  const openEsqlInDiscover = useCallback(
+    async (esql: string) => {
+      const locator = share?.url?.locators?.get<DiscoverAppLocatorParams>(DISCOVER_APP_LOCATOR);
+      if (!locator) {
+        return;
+      }
+      const { app, path, state } = await locator.getLocation({
+        query: { esql },
+      });
+      await application.navigateToApp(app, { path, state });
+    },
+    [application, share]
+  );
+
+  /** Create / clone: open Discover with the new-rule flyout; use form default query when set (e.g. clone). */
+  const onCreateInDiscoverFromForm = useCallback(async () => {
+    if (initialQuery === undefined || initialQuery === DEFAULT_QUERY) {
+      await openCreateInDiscover();
+      return;
+    }
+    const locator = share?.url?.locators?.get<DiscoverAppLocatorParams>(DISCOVER_APP_LOCATOR);
+    if (!locator?.getLocation) {
+      return;
+    }
+    const { app, path, state } = await locator.getLocation({
+      query: { esql: initialQuery },
+      openCreateEsqlRuleV2Flyout: true,
+    });
+    await application.navigateToApp(app, { path, state });
+  }, [application, initialQuery, openCreateInDiscover, share]);
+
+  const openContinueInDiscover = useCallback(async () => {
+    if (!ruleId) {
+      return;
+    }
+    const locator = share?.url?.locators?.get<DiscoverAppLocatorParams>(DISCOVER_APP_LOCATOR);
+    if (!locator?.getLocation) {
+      return;
+    }
+    const esql = initialQuery ?? DEFAULT_QUERY;
+    const { app, path, state } = await locator.getLocation({
+      query: { esql },
+      openCreateEsqlRuleV2Flyout: true,
+      esqlRuleV2EditRuleId: ruleId,
+    });
+    await application.navigateToApp(app, { path, state });
+  }, [application, initialQuery, ruleId, share]);
 
   useBreadcrumbs(isEditing ? 'edit' : 'create');
 
@@ -148,8 +204,9 @@ const RuleFormPageContent = ({ ruleId, initialQuery, initialValues }: RuleFormPa
       notifications,
       application,
       lens,
+      openEsqlInDiscover,
     }),
-    [http, data, dataViews, notifications, application, lens]
+    [http, data, dataViews, notifications, application, lens, openEsqlInDiscover]
   );
 
   const onSuccess = useCallback(() => {
@@ -176,9 +233,61 @@ const RuleFormPageContent = ({ ruleId, initialQuery, initialValues }: RuleFormPa
     <FormattedMessage id="xpack.alertingV2.createRule.submitLabel" defaultMessage="Create rule" />
   );
 
+  const editInDiscoverLabel = i18n.translate('xpack.alertingV2.rulesList.action.editInDiscover', {
+    defaultMessage: 'Edit in Discover',
+  });
+  const createInDiscoverLabel = i18n.translate('xpack.alertingV2.rulesList.createInDiscover', {
+    defaultMessage: 'Create in Discover',
+  });
+
+  const pageHeaderRight = useMemo(() => {
+    if (!canCreateInDiscover) {
+      return undefined;
+    }
+    if (ruleId) {
+      return [
+        <EuiButton
+          key="editInDiscover"
+          data-test-subj="ruleFormPageEditInDiscoverButton"
+          size="s"
+          color="text"
+          fill={false}
+          iconType="discoverApp"
+          onClick={() => {
+            void openContinueInDiscover();
+          }}
+        >
+          {editInDiscoverLabel}
+        </EuiButton>,
+      ];
+    }
+    return [
+      <EuiButton
+        key="createInDiscoverForm"
+        data-test-subj="ruleFormPageCreateInDiscoverButton"
+        size="s"
+        color="text"
+        fill={false}
+        iconType="discoverApp"
+        onClick={() => {
+          void onCreateInDiscoverFromForm();
+        }}
+      >
+        {createInDiscoverLabel}
+      </EuiButton>,
+    ];
+  }, [
+    canCreateInDiscover,
+    createInDiscoverLabel,
+    editInDiscoverLabel,
+    onCreateInDiscoverFromForm,
+    openContinueInDiscover,
+    ruleId,
+  ]);
+
   return (
     <>
-      <EuiPageHeader pageTitle={pageTitle} />
+      <EuiPageHeader pageTitle={pageTitle} rightSideItems={pageHeaderRight} />
       <EuiSpacer size="m" />
       <StandaloneRuleForm
         query={initialQuery ?? DEFAULT_QUERY}

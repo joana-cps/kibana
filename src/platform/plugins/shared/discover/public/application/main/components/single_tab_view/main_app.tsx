@@ -16,6 +16,7 @@ import { useDiscoverServices } from '../../../../hooks/use_discover_services';
 import { useSavedSearchAliasMatchRedirect } from '../../../../hooks/saved_search_alias_match_redirect';
 import { useAdHocDataViews } from '../../hooks/use_adhoc_data_views';
 import { DiscoverAgentBuilderConfig } from './discover_agent_builder_config';
+import { DiscoverOpenEsqlRuleV2FromNavigation } from './discover_open_esql_rule_v2_from_navigation';
 
 const DiscoverLayoutMemoized = React.memo(DiscoverLayout);
 
@@ -40,6 +41,7 @@ export function DiscoverMainApp() {
   return (
     <RootDragDropProvider>
       <DiscoverAgentBuilderConfig />
+      <DiscoverOpenEsqlRuleV2FromNavigation />
       <DiscoverLayoutMemoized />
     </RootDragDropProvider>
   );

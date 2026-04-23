@@ -64,4 +64,14 @@ describe('SubmissionButtons', () => {
     expect(screen.queryByTestId('showRequestCreateTab')).not.toBeInTheDocument();
     expect(screen.queryByTestId('showRequestUpdateTab')).not.toBeInTheDocument();
   });
+
+  it('does not render show request when showRequestButton is false', () => {
+    render(
+      <SubmissionButtons isSubmitting={false} onCancel={jest.fn()} showRequestButton={false} />,
+      { wrapper: createFormWrapper() }
+    );
+
+    expect(screen.queryByTestId('ruleV2FormShowRequestButton')).not.toBeInTheDocument();
+    expect(screen.getByTestId('ruleV2FormSubmitButton')).toBeInTheDocument();
+  });
 });

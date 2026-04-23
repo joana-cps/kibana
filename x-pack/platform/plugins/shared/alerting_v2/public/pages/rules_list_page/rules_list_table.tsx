@@ -34,6 +34,7 @@ import { FormattedMessage } from '@kbn/i18n-react';
 import { i18n } from '@kbn/i18n';
 import { getIndexPatternFromESQLQuery } from '@kbn/esql-utils';
 import type { RuleApiResponse } from '../../services/rules_api';
+import { QuickEditRuleButton } from '../../components/quick_edit_rule_button';
 import { RuleActionsMenu } from './rule_actions_menu';
 
 const labelsContainerStyle = css`
@@ -97,6 +98,13 @@ export interface RulesListTableProps {
   onClone: (rule: RuleApiResponse) => void;
   onDelete: (rule: RuleApiResponse) => void;
   onToggleEnabled: (rule: RuleApiResponse) => void;
+  canOpenEditInDiscover: boolean;
+  canEditWithAi: boolean;
+  onEditInDiscover: (rule: RuleApiResponse) => void | Promise<void>;
+  onEditInBuilder: (rule: RuleApiResponse) => void;
+  onEditWithAiAgent: (rule: RuleApiResponse) => void;
+  onRunRule: (rule: RuleApiResponse) => void;
+  onUpdateApiKey: (rule: RuleApiResponse) => void;
 
   /** Pagination callback */
   onTableChange: (criteria: Criteria<RuleApiResponse>) => void;
@@ -129,6 +137,13 @@ export const RulesListTable: React.FC<RulesListTableProps> = ({
   onClone,
   onDelete,
   onToggleEnabled,
+  canOpenEditInDiscover,
+  canEditWithAi,
+  onEditInDiscover,
+  onEditInBuilder,
+  onEditWithAiAgent,
+  onRunRule,
+  onUpdateApiKey,
   onTableChange,
 }) => {
   const { euiTheme } = useEuiTheme();
@@ -352,16 +367,34 @@ export const RulesListTable: React.FC<RulesListTableProps> = ({
             defaultMessage="Actions"
           />
         ),
-        width: '6%',
+        width: '8%',
         align: 'right',
         render: (rule: RuleApiResponse) => (
-          <RuleActionsMenu
-            rule={rule}
-            onEdit={onEdit}
-            onClone={onClone}
-            onDelete={onDelete}
-            onToggleEnabled={onToggleEnabled}
-          />
+          <EuiFlexGroup
+            gutterSize="xs"
+            alignItems="center"
+            justifyContent="flexEnd"
+            responsive={false}
+          >
+            <EuiFlexItem grow={false}>
+              <QuickEditRuleButton rule={rule} onEdit={onEdit} />
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <RuleActionsMenu
+                rule={rule}
+                canOpenEditInDiscover={canOpenEditInDiscover}
+                canEditWithAi={canEditWithAi}
+                onEditInDiscover={onEditInDiscover}
+                onEditInBuilder={onEditInBuilder}
+                onEditWithAiAgent={onEditWithAiAgent}
+                onRunRule={onRunRule}
+                onUpdateApiKey={onUpdateApiKey}
+                onClone={onClone}
+                onDelete={onDelete}
+                onToggleEnabled={onToggleEnabled}
+              />
+            </EuiFlexItem>
+          </EuiFlexGroup>
         ),
       },
     ],
@@ -376,6 +409,13 @@ export const RulesListTable: React.FC<RulesListTableProps> = ({
       onClone,
       onDelete,
       onToggleEnabled,
+      canOpenEditInDiscover,
+      canEditWithAi,
+      onEditInDiscover,
+      onEditInBuilder,
+      onEditWithAiAgent,
+      onRunRule,
+      onUpdateApiKey,
     ]
   );
 

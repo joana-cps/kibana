@@ -27,6 +27,20 @@ import { DiscoverToolkitTestProvider } from '../../../../__mocks__/test_provider
 import { DiscoverTopNavMenuProvider, discoverTopNavMenuContext } from './discover_topnav_menu';
 import type { AppMenuConfig } from '@kbn/core-chrome-app-menu-components';
 
+jest.mock('@kbn/alerts-ui-shared', () => ({
+  ...jest.requireActual('@kbn/alerts-ui-shared'),
+  useGetRuleTypesPermissions: jest.fn(() => ({
+    authorizedRuleTypes: [
+      {
+        id: '.es-query',
+        authorizedConsumers: {
+          discover: { all: true, read: true },
+        },
+      },
+    ],
+  })),
+}));
+
 let mockDiscoverService = createDiscoverServicesMock();
 type AggregateQueryTopNavMenuProps = ComponentProps<
   typeof mockDiscoverService.navigation.ui.AggregateQueryTopNavMenu

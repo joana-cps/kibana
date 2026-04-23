@@ -27,6 +27,11 @@ export interface RuleFormFlyoutProps {
   onClose?: () => void;
   isLoading?: boolean;
   children: React.ReactNode;
+  /**
+   * `create` (default) shows "Create Alert Rule" and a create-style primary action;
+   * `edit` shows edit copy and "Save" for update flows (for example, editing from Discover).
+   */
+  variant?: 'create' | 'edit';
 }
 
 /**
@@ -47,7 +52,9 @@ export const RuleFormFlyout = ({
   onClose,
   isLoading = false,
   children,
+  variant = 'create',
 }: RuleFormFlyoutProps) => {
+  const isEdit = variant === 'edit';
   const clickedRef = useRef(false);
 
   const onFocusCapture = useCallback(
@@ -66,7 +73,7 @@ export const RuleFormFlyout = ({
     <EuiFlyout
       session="start"
       flyoutMenuProps={{
-        title: 'Create Alert Rule',
+        title: isEdit ? 'Edit Alert Rule' : 'Create Alert Rule',
         hideTitle: true,
       }}
       type={push ? 'push' : 'overlay'}
@@ -86,12 +93,19 @@ export const RuleFormFlyout = ({
         onFocusCapture={onFocusCapture}
       >
         <EuiFlyoutHeader hasBorder>
-          <EuiTitle size="m" id={FLYOUT_TITLE_ID}>
+          <EuiTitle size="s" id={FLYOUT_TITLE_ID}>
             <h2>
-              <FormattedMessage
-                id="xpack.alertingV2.ruleForm.flyoutTitle"
-                defaultMessage="Create Alert Rule"
-              />
+              {isEdit ? (
+                <FormattedMessage
+                  id="xpack.alertingV2.ruleForm.flyoutTitleEdit"
+                  defaultMessage="Edit Alert Rule"
+                />
+              ) : (
+                <FormattedMessage
+                  id="xpack.alertingV2.ruleForm.flyoutTitle"
+                  defaultMessage="Create Alert Rule"
+                />
+              )}
             </h2>
           </EuiTitle>
         </EuiFlyoutHeader>
@@ -114,10 +128,17 @@ export const RuleFormFlyout = ({
                 type="submit"
                 data-test-subj="ruleV2FlyoutSaveButton"
               >
-                <FormattedMessage
-                  id="xpack.alertingV2.ruleForm.createRuleButtonLabel"
-                  defaultMessage="Create rule"
-                />
+                {isEdit ? (
+                  <FormattedMessage
+                    id="xpack.alertingV2.ruleForm.saveRuleButtonLabel"
+                    defaultMessage="Save"
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="xpack.alertingV2.ruleForm.createRuleButtonLabel"
+                    defaultMessage="Create rule"
+                  />
+                )}
               </EuiButton>
             </EuiFlexItem>
           </EuiFlexGroup>

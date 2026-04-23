@@ -259,5 +259,32 @@ describe('Custom Editor Commands', () => {
 
       expect(mockOnPrettifyQuery).toHaveBeenCalledTimes(1);
     });
+
+    it('registers create ES|QL rule shortcut when callback is provided', () => {
+      const mockOnQuerySubmit = jest.fn();
+      const mockToggleVisor = jest.fn();
+      const mockOnPrettifyQuery = jest.fn();
+      const mockOnCreateEsqlRule = jest.fn();
+
+      addEditorKeyBindings(
+        mockEditor,
+        mockOnQuerySubmit,
+        mockToggleVisor,
+        mockOnPrettifyQuery,
+        mockOnCreateEsqlRule
+      );
+
+      expect(mockEditor.addCommand).toHaveBeenCalledTimes(4);
+
+      const cmdShiftACall = (mockEditor.addCommand as jest.Mock).mock.calls.find(
+        // eslint-disable-next-line no-bitwise
+        ([keyMod]) => keyMod === (monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyA)
+      );
+      expect(cmdShiftACall).toBeDefined();
+
+      const cmdShiftAHandler = cmdShiftACall![1];
+      cmdShiftAHandler();
+      expect(mockOnCreateEsqlRule).toHaveBeenCalledTimes(1);
+    });
   });
 });

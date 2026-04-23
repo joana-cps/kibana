@@ -20,10 +20,10 @@ interface EditModeToggleProps {
 const toggleButtons = [
   {
     id: 'form',
-    label: i18n.translate('xpack.alertingV2.ruleForm.editMode.form', {
-      defaultMessage: 'Form',
+    label: i18n.translate('xpack.alertingV2.ruleForm.editMode.gui', {
+      defaultMessage: 'GUI',
     }),
-    iconType: 'productDashboard',
+    iconType: 'tableOfContents',
     'data-test-subj': 'ruleV2FormEditModeFormButton',
   },
   {

@@ -157,5 +157,17 @@ describe('utils', () => {
 
       expect(response.metadata.description).toBe('Round-trip desc');
     });
+
+    it('round-trips metadata.source through create → transform', () => {
+      const createData: CreateRuleData = {
+        ...baseCreateData,
+        metadata: { name: 'src-rule', source: 'discover' },
+      };
+
+      const soAttrs = transformCreateRuleBodyToRuleSoAttributes(createData, serverFields);
+      const response = transformRuleSoAttributesToRuleApiResponse('rule-src-1', soAttrs);
+
+      expect(response.metadata.source).toBe('discover');
+    });
   });
 });

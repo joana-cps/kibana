@@ -24,7 +24,9 @@ import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
 import React from 'react';
 import { paths } from '../../../constants';
+import { QuickEditRuleButton } from '../../quick_edit_rule_button';
 import { RuleActionsMenu } from '../../../pages/rules_list_page/rule_actions_menu';
+import { useRuleListRowMenuActions } from '../../../pages/rules_list_page/use_rule_list_row_menu_actions';
 import { RuleProvider } from '../../rule_details/rule_context';
 import {
   RuleHeaderDescription,
@@ -56,6 +58,16 @@ export const RuleSummaryFlyout = ({
   const { basePath } = useService(CoreStart('http'));
   const detailsHref = basePath.prepend(paths.ruleDetails(rule.id));
 
+  const {
+    canOpenEditInDiscover,
+    canEditWithAi,
+    onEditInDiscover,
+    onEditInBuilder,
+    onEditWithAiAgent,
+    onRunRule,
+    onUpdateApiKey,
+  } = useRuleListRowMenuActions();
+
   return (
     <RuleProvider rule={rule}>
       <EuiFlyout
@@ -83,9 +95,18 @@ export const RuleSummaryFlyout = ({
             alignItems="center"
           >
             <EuiFlexItem grow={false}>
+              <QuickEditRuleButton rule={rule} onEdit={onEdit} />
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
               <RuleActionsMenu
                 rule={rule}
-                onEdit={onEdit}
+                canOpenEditInDiscover={canOpenEditInDiscover}
+                canEditWithAi={canEditWithAi}
+                onEditInDiscover={onEditInDiscover}
+                onEditInBuilder={onEditInBuilder}
+                onEditWithAiAgent={onEditWithAiAgent}
+                onRunRule={onRunRule}
+                onUpdateApiKey={onUpdateApiKey}
                 onClone={onClone}
                 onDelete={onDelete}
                 onToggleEnabled={onToggleEnabled}

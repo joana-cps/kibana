@@ -134,8 +134,14 @@ describe('RuleForm', () => {
       expect(screen.queryByTestId('ruleV2FormEditModeToggle')).not.toBeInTheDocument();
     });
 
-    it('shows edit mode toggle when includeYaml is true', () => {
+    it('does not show edit mode toggle on page layout when includeYaml is true', () => {
       render(<RuleForm {...defaultProps} includeYaml />, { wrapper: createFormWrapper() });
+
+      expect(screen.queryByTestId('ruleV2FormEditModeToggle')).not.toBeInTheDocument();
+    });
+
+    it('shows edit mode toggle when includeYaml is true and layout is flyout', () => {
+      render(<RuleForm {...defaultProps} includeYaml layout="flyout" />, { wrapper: createFormWrapper() });
 
       expect(screen.getByTestId('ruleV2FormEditModeToggle')).toBeInTheDocument();
       expect(screen.getByTestId('ruleV2FormEditModeFormButton')).toBeInTheDocument();
@@ -145,13 +151,13 @@ describe('RuleForm', () => {
     it('shows Rule configuration heading when includeYaml is true', () => {
       render(<RuleForm {...defaultProps} includeYaml />, { wrapper: createFormWrapper() });
 
-      expect(screen.getByText('Rule configuration')).toBeInTheDocument();
+      expect(screen.getByText('Rule Configuration')).toBeInTheDocument();
     });
 
     it('does not show Rule configuration heading when includeYaml is false', () => {
       render(<RuleForm {...defaultProps} includeYaml={false} />, { wrapper: createFormWrapper() });
 
-      expect(screen.queryByText('Rule configuration')).not.toBeInTheDocument();
+      expect(screen.queryByText('Rule Configuration')).not.toBeInTheDocument();
     });
 
     it('starts in form mode by default', () => {
@@ -164,7 +170,7 @@ describe('RuleForm', () => {
     it('switches to YAML mode when YAML toggle is clicked', async () => {
       const user = userEvent.setup();
 
-      render(<RuleForm {...defaultProps} includeYaml />, { wrapper: createFormWrapper() });
+      render(<RuleForm {...defaultProps} includeYaml layout="flyout" />, { wrapper: createFormWrapper() });
 
       await user.click(screen.getByTestId('ruleV2FormEditModeYamlButton'));
 
@@ -175,7 +181,7 @@ describe('RuleForm', () => {
     it('switches back to form mode when Form toggle is clicked', async () => {
       const user = userEvent.setup();
 
-      render(<RuleForm {...defaultProps} includeYaml />, { wrapper: createFormWrapper() });
+      render(<RuleForm {...defaultProps} includeYaml layout="flyout" />, { wrapper: createFormWrapper() });
 
       // Switch to YAML
       await user.click(screen.getByTestId('ruleV2FormEditModeYamlButton'));
@@ -188,7 +194,7 @@ describe('RuleForm', () => {
     });
 
     it('disables toggle when isDisabled is true', () => {
-      render(<RuleForm {...defaultProps} includeYaml isDisabled />, {
+      render(<RuleForm {...defaultProps} includeYaml isDisabled layout="flyout" />, {
         wrapper: createFormWrapper(),
       });
 
@@ -274,7 +280,7 @@ describe('RuleForm', () => {
     it('shows submission buttons in YAML mode', async () => {
       const user = userEvent.setup();
 
-      render(<RuleForm {...defaultProps} includeSubmission includeYaml />, {
+      render(<RuleForm {...defaultProps} includeSubmission includeYaml layout="flyout" />, {
         wrapper: createFormWrapper(),
       });
 

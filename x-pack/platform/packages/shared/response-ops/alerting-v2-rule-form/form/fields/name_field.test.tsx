@@ -32,7 +32,7 @@ describe('NameField', () => {
 
     const input = screen.getByTestId('ruleNameInput');
     expect(input).toBeInTheDocument();
-    expect(input).toHaveAttribute('placeholder', 'Untitled rule');
+    expect(input).toHaveAttribute('placeholder', 'Add a rule name');
   });
 
   it('displays initial value from form context', () => {

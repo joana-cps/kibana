@@ -46,6 +46,7 @@ const mapMetadata = (metadata: FormValues['metadata']) => ({
   description: metadata.description,
   owner: metadata.owner,
   tags: metadata.tags,
+  ...(metadata.source !== undefined ? { source: metadata.source } : {}),
 });
 
 const mapSchedule = (schedule: FormValues['schedule']) => ({
@@ -257,6 +258,7 @@ export const mapRuleResponseToFormValues = (rule: RuleResponse): Partial<FormVal
       enabled: rule.enabled,
       owner: rule.metadata.owner,
       tags: rule.metadata.tags,
+      ...(rule.metadata.source !== undefined ? { source: rule.metadata.source } : {}),
     },
     timeField: rule.time_field,
     schedule: {

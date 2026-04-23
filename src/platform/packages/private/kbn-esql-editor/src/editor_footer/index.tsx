@@ -51,6 +51,7 @@ interface EditorFooterProps {
   dataErrorsControl?: DataErrorsControl;
   starredQueriesService: EsqlStarredQueriesService | null;
   queryStats?: QueryStats;
+  showCreateEsqlRuleKeyboardShortcut?: boolean;
 }
 
 const openDocumentationLabel = i18n.translate('esqlEditor.query.documentationAriaLabel', {
@@ -77,6 +78,7 @@ export const EditorFooter = memo(function EditorFooter({
   dataErrorsControl,
   starredQueriesService,
   queryStats,
+  showCreateEsqlRuleKeyboardShortcut,
 }: EditorFooterProps) {
   const kibana = useKibana<ESQLEditorDeps>();
   const { docLinks } = kibana.services;
@@ -142,7 +144,9 @@ export const EditorFooter = memo(function EditorFooter({
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiFlexGroup gutterSize="xs" responsive={false} alignItems="center">
-              <KeyboardShortcuts />
+              <KeyboardShortcuts
+                showCreateEsqlRuleKeyboardShortcut={showCreateEsqlRuleKeyboardShortcut}
+              />
               <QueryWrapComponent onPrettifyQuery={onPrettifyQuery} />
               {displayDocumentationAsFlyout && (
                 <>

@@ -42,6 +42,10 @@ jest.mock('./kibana_services', () => ({
     }),
 }));
 
+jest.mock('./edit_esql_rule_form_flyout', () => ({
+  EditEsqlRuleFormFlyout: () => <div data-test-subj="mockEditEsqlRuleFormFlyout" />,
+}));
+
 import { DynamicRuleFormFlyout } from './create_rule_form_flyout';
 
 describe('DynamicRuleFormFlyout', () => {
@@ -110,5 +114,23 @@ describe('DynamicRuleFormFlyout', () => {
     });
 
     expect(capturedFlyoutProps.push).toBe(true);
+  });
+
+  it('renders the edit flyout when ruleId is set instead of the package create flyout', async () => {
+    const mockServices = createMockServices();
+    render(
+      <DynamicRuleFormFlyout
+        query="ROW 1"
+        ruleId="rule-123"
+        onClose={jest.fn()}
+      />
+    );
+
+    resolveServices(mockServices);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('mockEditEsqlRuleFormFlyout')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('mockDynamicRuleFormFlyout')).not.toBeInTheDocument();
   });
 });

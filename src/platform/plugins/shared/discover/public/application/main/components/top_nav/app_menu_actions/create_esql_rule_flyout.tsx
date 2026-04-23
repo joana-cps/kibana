@@ -28,12 +28,15 @@ export function CreateESQLRuleFlyout({
   getState,
   subscribe,
   onClose,
+  editRuleId,
 }: {
   services: DiscoverServices;
   tabId: string;
   getState: () => DiscoverInternalState;
   subscribe: (listener: () => void) => () => void;
   onClose: () => void;
+  /** When set, load and edit this alerting v2 rule in the flyout (deep link from quick edit). */
+  editRuleId?: string;
 }) {
   const getQuery = useCallback(() => getEsqlQuery(getState, tabId), [getState, tabId]);
 
@@ -81,5 +84,7 @@ export function CreateESQLRuleFlyout({
     return null;
   }
 
-  return <RuleFormFlyout query={query} onClose={onClose} />;
+  return (
+    <RuleFormFlyout query={query} onClose={onClose} ruleId={editRuleId} />
+  );
 }

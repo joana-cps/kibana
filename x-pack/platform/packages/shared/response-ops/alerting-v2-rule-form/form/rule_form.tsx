@@ -54,6 +54,8 @@ export interface RuleFormProps {
   cancelLabel?: React.ReactNode;
   /** When provided, the form operates in edit mode and uses PATCH instead of POST on submission. */
   ruleId?: string;
+  /** @see StandaloneRuleForm / RuleFormProvider meta */
+  formVariant?: 'default' | 'quickEdit';
 }
 
 /**
@@ -76,12 +78,15 @@ const RuleFormContent = ({
   submitLabel,
   cancelLabel,
   ruleId,
+  formVariant = 'default',
 }: RuleFormProps) => {
   const { reset } = useFormContext<FormValues>();
   const services = useRuleFormServices();
   const { layout } = useRuleFormMeta();
   const { http, notifications } = services;
   const [editMode, setEditMode] = useState<EditMode>('form');
+  /** Full-page rule form hides the GUI/YAML switch; flyouts keep it. */
+  const showEditModeToggle = includeYaml && layout === 'flyout';
 
   // Internal submission hooks — always initialised so hooks are stable,
   // but only the appropriate one is used when no external onSubmit is provided.
@@ -137,7 +142,7 @@ const RuleFormContent = ({
       {includeYaml && (
         <EuiFlexGroup
           alignItems="center"
-          justifyContent="spaceBetween"
+          justifyContent={showEditModeToggle ? 'spaceBetween' : 'flexStart'}
           responsive={false}
           gutterSize="m"
         >
@@ -146,18 +151,20 @@ const RuleFormContent = ({
               <h3>
                 <FormattedMessage
                   id="xpack.alertingV2.ruleForm.ruleConfigurationHeading"
-                  defaultMessage="Rule configuration"
+                  defaultMessage="Rule Configuration"
                 />
               </h3>
             </EuiTitle>
           </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            <EditModeToggle
-              editMode={editMode}
-              onChange={handleModeChange}
-              disabled={isDisabled || isSubmitting}
-            />
-          </EuiFlexItem>
+          {showEditModeToggle ? (
+            <EuiFlexItem grow={false}>
+              <EditModeToggle
+                editMode={editMode}
+                onChange={handleModeChange}
+                disabled={isDisabled || isSubmitting}
+              />
+            </EuiFlexItem>
+          ) : null}
         </EuiFlexGroup>
       )}
       <EuiSpacer size="m" />
@@ -170,7 +177,11 @@ const RuleFormContent = ({
           isSubmitting={isSubmitting}
         />
       ) : (
-        <GuiRuleForm onSubmit={onSubmit} includeQueryEditor={includeQueryEditor} />
+        <GuiRuleForm
+          onSubmit={onSubmit}
+          includeQueryEditor={includeQueryEditor}
+          formVariant={formVariant}
+        />
       )}
 
       {includeSubmission && (
@@ -180,6 +191,7 @@ const RuleFormContent = ({
           submitLabel={submitLabel}
           cancelLabel={cancelLabel}
           ruleId={ruleId}
+          showRequestButton={formVariant !== 'quickEdit'}
         />
       )}
     </>
@@ -187,22 +199,35 @@ const RuleFormContent = ({
 
   if (layout === 'page') {
     return (
-      <EuiFlexGroup gutterSize="l" alignItems="flexStart">
+      <EuiFlexGroup gutterSize="l" alignItems="flexStart" responsive={false}>
         <EuiFlexItem grow={1} style={{ minWidth: 0 }}>
           {formContent}
         </EuiFlexItem>
-        <EuiFlexItem grow={1} style={{ minWidth: 0 }}>
-          <RulePreviewPanel />
-        </EuiFlexItem>
+        {formVariant !== 'quickEdit' ? (
+          <EuiFlexItem
+            grow={1}
+            style={{
+              minWidth: 0,
+              position: 'sticky',
+              top: 16,
+              alignSelf: 'flex-start',
+              maxHeight: 'calc(100vh - 32px)',
+              overflowY: 'auto',
+            }}
+            data-test-subj="ruleFormPagePreviewColumn"
+          >
+            <RulePreviewPanel />
+          </EuiFlexItem>
+        ) : null}
       </EuiFlexGroup>
     );
   }
 
-  // Flyout layout: form with nested flyout preview
+  // Flyout layout: form with nested flyout preview (preview omitted for quick edit)
   return (
     <>
       {formContent}
-      <RulePreviewPanel />
+      {formVariant !== 'quickEdit' ? <RulePreviewPanel /> : null}
     </>
   );
 };
@@ -221,7 +246,7 @@ const RuleFormContent = ({
  * Includes its own QueryClientProvider for react-query hooks used by field components.
  * Services and layout metadata are provided via RuleFormProvider context, eliminating prop drilling.
  */
-export const RuleForm = ({ layout = 'page', ...props }: RuleFormProps) => {
+export const RuleForm = ({ layout = 'page', formVariant = 'default', ...props }: RuleFormProps) => {
   const queryClient = useMemo(
     () =>
       new QueryClient({
@@ -235,12 +260,12 @@ export const RuleForm = ({ layout = 'page', ...props }: RuleFormProps) => {
     []
   );
 
-  const meta = useMemo(() => ({ layout }), [layout]);
+  const meta = useMemo(() => ({ layout, formVariant }), [layout, formVariant]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <RuleFormProvider services={props.services} meta={meta}>
-        <RuleFormContent {...props} />
+        <RuleFormContent {...props} formVariant={formVariant} />
       </RuleFormProvider>
     </QueryClientProvider>
   );

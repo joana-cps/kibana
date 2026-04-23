@@ -28,7 +28,14 @@ import { RecoveryDelayField } from '../fields/recovery_delay_field';
  *     uses RecoveryBaseQueryOnlyField (full ES|QL editor with "not same as eval" validation)
  * - Recovery delay (recovering state transition: immediate / recoveries / duration)
  */
-export const AlertConditionsFieldGroup = () => {
+export interface AlertConditionsFieldGroupProps {
+  /** When false, alert conditions section starts collapsed (quick edit). */
+  defaultOpen?: boolean;
+}
+
+export const AlertConditionsFieldGroup = ({
+  defaultOpen = true,
+}: AlertConditionsFieldGroupProps) => {
   const { control } = useFormContext<FormValues>();
   const { data } = useRuleFormServices();
   const kind = useWatch({ control, name: 'kind' });
@@ -47,7 +54,7 @@ export const AlertConditionsFieldGroup = () => {
       title={i18n.translate('xpack.alertingV2.ruleForm.alertConditions', {
         defaultMessage: 'Alert conditions',
       })}
-      defaultOpen
+      defaultOpen={defaultOpen}
     >
       <AlertDelayField />
       <EuiSpacer size="m" />

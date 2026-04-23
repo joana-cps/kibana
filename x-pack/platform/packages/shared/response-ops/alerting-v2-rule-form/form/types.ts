@@ -21,12 +21,16 @@ export type StateTransitionDelayMode = (typeof DELAY_MODE)[keyof typeof DELAY_MO
 /**
  * Rule metadata containing identification and categorization info.
  */
+export type RuleCreationSource = 'discover' | 'kibana_ui';
+
 export interface RuleMetadata {
   name: string;
   enabled: boolean;
   description?: string;
   owner?: string;
   tags?: string[];
+  /** Where the rule was first created; drives quick-edit ES|QL editability. */
+  source?: RuleCreationSource;
 }
 
 export interface RuleSchedule {

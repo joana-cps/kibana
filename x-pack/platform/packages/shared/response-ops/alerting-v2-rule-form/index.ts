@@ -6,7 +6,7 @@
  */
 
 // Pre-composed flyouts (lazy loaded) - recommended for most use cases
-export { DynamicRuleFormFlyout, StandaloneRuleFormFlyout } from './flyout';
+export { DynamicRuleFormFlyout, StandaloneRuleFormFlyout, RuleFormFlyout } from './flyout';
 
 // Lazy components (without Suspense wrapper) - for consumers who need full control
 export {
@@ -36,6 +36,7 @@ export {
   mapFormValuesToUpdateRequest,
   mapRuleResponseToFormValues,
 } from './form';
+export { useUpdateRule } from './form';
 
 // Types
 export type {
@@ -46,6 +47,8 @@ export type {
   RuleFormServices,
   RuleFormMeta,
   RuleFormLayout,
+  RuleFormVariant,
+  RuleCreationSource,
   RuleRequestCommon,
 } from './form';
 

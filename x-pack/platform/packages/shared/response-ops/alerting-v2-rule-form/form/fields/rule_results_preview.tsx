@@ -5,10 +5,13 @@
  * 2.0.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { i18n } from '@kbn/i18n';
+import { useFormContext, useWatch } from 'react-hook-form';
+import type { FormValues } from '../types';
 import { useRulePreview } from '../hooks/use_rule_preview';
 import { QueryResultsGrid } from './query_results_grid';
+import { OpenInDiscoverLink } from './open_in_discover_link';
 
 /**
  * Rule results preview panel.
@@ -18,6 +21,8 @@ import { QueryResultsGrid } from './query_results_grid';
  * when results are available. Delegates rendering to `QueryResultsGrid`.
  */
 export const RuleResultsPreview = () => {
+  const { control } = useFormContext<FormValues>();
+  const baseQuery = useWatch({ name: 'evaluation.query.base', control });
   const {
     columns,
     rows,
@@ -33,11 +38,14 @@ export const RuleResultsPreview = () => {
     lookback,
   } = useRulePreview();
 
+  const headerActions = useMemo(() => <OpenInDiscoverLink esql={baseQuery ?? ''} />, [baseQuery]);
+
   return (
     <QueryResultsGrid
       title={i18n.translate('xpack.alertingV2.ruleForm.ruleResultsPreview.title', {
         defaultMessage: 'Rule results preview',
       })}
+      headerActions={headerActions}
       dataTestSubj="ruleResultsPreviewGrid"
       emptyBody={i18n.translate('xpack.alertingV2.ruleForm.ruleResultsPreview.emptyBody', {
         defaultMessage:

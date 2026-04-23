@@ -69,6 +69,8 @@ export interface QueryResultsGridProps {
   timeField?: string;
   /** The lookback duration string for the chart time range (e.g. '5m', '1h') */
   lookback?: string;
+  /** Extra controls in the panel header (e.g. Open in Discover) */
+  headerActions?: React.ReactNode;
 }
 
 /**
@@ -97,6 +99,7 @@ export const QueryResultsGrid = ({
   query,
   timeField,
   lookback,
+  headerActions,
 }: QueryResultsGridProps) => {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
 
@@ -173,6 +176,7 @@ export const QueryResultsGrid = ({
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
           <EuiFlexGroup gutterSize="m" alignItems="center" responsive={false}>
+            {headerActions}
             {lookback && (
               <EuiFlexItem grow={false}>
                 <EuiText size="xs" color="subdued">

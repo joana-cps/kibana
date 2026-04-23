@@ -55,6 +55,32 @@ describe('Discover url generator', () => {
     expect(_g).toEqual(undefined);
   });
 
+  test('includes openCreateEsqlRuleV2Flyout in location state for alerting v2 deep links', async () => {
+    const { locator } = await setup();
+    const { app, state } = await locator.getLocation({
+      query: { esql: 'ROW 1' },
+      openCreateEsqlRuleV2Flyout: true,
+    });
+
+    expect(app).toBe('discover');
+    expect(state).toEqual({ openCreateEsqlRuleV2Flyout: true });
+  });
+
+  test('includes esqlRuleV2EditRuleId in location state for Discover edit rule deep links', async () => {
+    const { locator } = await setup();
+    const { app, state } = await locator.getLocation({
+      query: { esql: 'ROW 1' },
+      openCreateEsqlRuleV2Flyout: true,
+      esqlRuleV2EditRuleId: 'rule-abc',
+    });
+
+    expect(app).toBe('discover');
+    expect(state).toEqual({
+      openCreateEsqlRuleV2Flyout: true,
+      esqlRuleV2EditRuleId: 'rule-abc',
+    });
+  });
+
   test('can create a link to a saved search in Discover', async () => {
     const { locator } = await setup();
     const { path } = await locator.getLocation({ savedSearchId });

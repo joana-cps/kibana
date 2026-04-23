@@ -21,12 +21,21 @@ jest.mock('@kbn/core-di-browser', () => ({
   CoreStart: (key: string) => key,
 }));
 
+jest.mock('../../../pages/rules_list_page/use_rule_list_row_menu_actions', () => ({
+  useRuleListRowMenuActions: () => ({
+    canOpenEditInDiscover: true,
+    canEditWithAi: true,
+    onEditInDiscover: jest.fn(),
+    onEditInBuilder: jest.fn(),
+    onEditWithAiAgent: jest.fn(),
+    onRunRule: jest.fn(),
+    onUpdateApiKey: jest.fn(),
+  }),
+}));
+
 jest.mock('../../../pages/rules_list_page/rule_actions_menu', () => ({
-  RuleActionsMenu: ({ rule, onEdit, onClone, onDelete, onToggleEnabled }: any) => (
+  RuleActionsMenu: ({ rule, onClone, onDelete, onToggleEnabled }: any) => (
     <div data-test-subj={`ruleActionsMenu-${rule.id}`}>
-      <button data-test-subj="mockEdit" onClick={() => onEdit(rule)}>
-        Edit
-      </button>
       <button data-test-subj="mockClone" onClick={() => onClone(rule)}>
         Clone
       </button>
@@ -148,7 +157,7 @@ describe('RuleSummaryFlyout', () => {
   it('forwards action callbacks to the RuleActionsMenu with the rule', () => {
     const { props } = renderFlyout();
 
-    fireEvent.click(screen.getByTestId('mockEdit'));
+    fireEvent.click(screen.getByTestId('editRule-rule-1'));
     expect(props.onEdit).toHaveBeenCalledWith(baseRule);
 
     fireEvent.click(screen.getByTestId('mockClone'));

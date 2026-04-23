@@ -19,13 +19,22 @@ export interface RuleFormServices {
   notifications: NotificationsStart;
   application: ApplicationStart;
   lens: LensPublicStart;
+  /**
+   * Open the given ES|QL in Discover. When omitted, "Open in Discover" is not shown
+   * in the rule summary / preview header.
+   */
+  openEsqlInDiscover?: (esql: string) => void | Promise<void>;
 }
 
 export type RuleFormLayout = 'page' | 'flyout';
 
+export type RuleFormVariant = 'default' | 'quickEdit';
+
 export interface RuleFormMeta {
   /** Whether the form is rendered on a full page or inside a flyout. */
   layout: RuleFormLayout;
+  /** `quickEdit` hides kind/runbook and collapses alert conditions by default. */
+  formVariant?: RuleFormVariant;
 }
 
 interface RuleFormContextValue {

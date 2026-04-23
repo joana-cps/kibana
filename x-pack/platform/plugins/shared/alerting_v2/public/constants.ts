@@ -25,7 +25,10 @@ export {
 } from '@kbn/alerting-v2-constants';
 
 export const paths = {
+  /** Rule builder cards hub (entry from "Create rule") */
   ruleCreate: `${ALERTING_V2_RULES_BASE_PATH}/create`,
+  /** Standalone create-rule form (threshold builder and clone-to-create flows) */
+  ruleCreateForm: `${ALERTING_V2_RULES_BASE_PATH}/create/form`,
   ruleEdit: (id: string) => `${ALERTING_V2_RULES_BASE_PATH}/edit/${encodeURIComponent(id)}`,
   ruleDetails: (id: string) => `${ALERTING_V2_RULES_BASE_PATH}/${encodeURIComponent(id)}`,
   ruleList: ALERTING_V2_RULES_BASE_PATH,

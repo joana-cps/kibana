@@ -22,6 +22,7 @@ const createMockServices = (): AlertingV2KibanaServices => ({
   lens: lensPluginMock.createStartContract(),
   expressions: {} as AlertingV2KibanaServices['expressions'],
   uiActions: {} as AlertingV2KibanaServices['uiActions'],
+  share: { url: { locators: { get: jest.fn() } } } as unknown as AlertingV2KibanaServices['share'],
 });
 
 describe('kibana_services', () => {

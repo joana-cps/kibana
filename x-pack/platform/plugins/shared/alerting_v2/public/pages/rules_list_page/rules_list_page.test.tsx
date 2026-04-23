@@ -23,16 +23,37 @@ jest.mock('../../application/breadcrumb_context', () => ({
   useSetBreadcrumbs: () => jest.fn(),
 }));
 
+jest.mock('../../kibana_services', () => ({
+  useAlertingV2KibanaServices: () => ({
+    share: { url: { locators: { get: () => undefined } } },
+  }),
+}));
+
+const mockNavigateToApp = jest.fn().mockResolvedValue(undefined);
+
+const mockApplicationCapabilities = {
+  discover_v2: { show: true },
+  alertingVTwo: true,
+};
+
 jest.mock('@kbn/core-di-browser', () => ({
   useService: (token: unknown) => {
     if (token === 'application') {
-      return { navigateToUrl: mockNavigateToUrl, getUrlForApp: mockGetUrlForApp };
+      return {
+        navigateToUrl: mockNavigateToUrl,
+        getUrlForApp: mockGetUrlForApp,
+        navigateToApp: mockNavigateToApp,
+        capabilities: mockApplicationCapabilities,
+      };
     }
     if (token === 'chrome') {
       return { docTitle: { change: mockDocTitleChange } };
     }
     if (token === 'http') {
       return { basePath: { prepend: (p: string) => p } };
+    }
+    if (token === 'docLinks') {
+      return { links: { alerting: { guide: 'https://www.elastic.co/guide' } } };
     }
     return {};
   },
@@ -221,7 +242,7 @@ describe('RulesListPage', () => {
     expect(screen.getByText('Network error')).toBeInTheDocument();
   });
 
-  it('shows "Showing 0-0 of 0 Rules" when there are no rules', () => {
+  it('renders the designed empty state when there are no rules and no search or filters', () => {
     mockUseFetchRules.mockReturnValue({
       data: { items: [], total: 0, page: 1, perPage: 20 },
       isLoading: false,
@@ -231,8 +252,10 @@ describe('RulesListPage', () => {
 
     renderPage();
 
-    const showingLabel = screen.getByTestId('rulesListShowingLabel');
-    expect(showingLabel).toHaveTextContent('Showing 0-0 of 0 Rules');
+    expect(screen.getByTestId('rulesListEmptyState')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Welcome to the new Alerting experience' })
+    ).toBeInTheDocument();
   });
 
   it('shows correct "Showing" range when rules exist', () => {
@@ -771,7 +794,7 @@ describe('RulesListPage', () => {
     fireEvent.click(screen.getByTestId('cloneRule-rule-1'));
 
     expect(mockNavigateToUrl).toHaveBeenCalledWith(
-      '/app/management/alertingV2/rules/create?cloneFrom=rule-1'
+      '/app/management/alertingV2/rules/create/form?cloneFrom=rule-1'
     );
   });
 

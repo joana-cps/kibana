@@ -10,10 +10,12 @@ import { OnSetup, PluginSetup, PluginStart, Start } from '@kbn/core-di';
 import { CoreSetup } from '@kbn/core-di-browser';
 import { i18n } from '@kbn/i18n';
 import type { ManagementSetup } from '@kbn/management-plugin/public';
+import type { AgentBuilderPluginStart } from '@kbn/agent-builder-plugin/public';
 import type { DataPublicPluginStart } from '@kbn/data-plugin/public';
 import type { DataViewsPublicPluginStart } from '@kbn/data-views-plugin/public';
 import type { ExpressionsStart } from '@kbn/expressions-plugin/public';
 import type { LensPublicStart } from '@kbn/lens-plugin/public';
+import type { SharePluginStart } from '@kbn/share-plugin/public';
 import type { UiActionsStart } from '@kbn/ui-actions-plugin/public';
 import {
   ALERTING_V2_SECTION_ID,
@@ -43,6 +45,13 @@ export const module = new ContainerModule(({ bind }) => {
 
     getStartServices().then(([coreStart]) => {
       const diContainer = coreStart.injection.getContainer();
+      const share = diContainer.get(PluginStart('share')) as SharePluginStart;
+      let agentBuilder: AgentBuilderPluginStart | undefined;
+      try {
+        agentBuilder = diContainer.get(PluginStart('agentBuilder')) as AgentBuilderPluginStart;
+      } catch {
+        agentBuilder = undefined;
+      }
       setKibanaServices({
         http: coreStart.http,
         notifications: coreStart.notifications,
@@ -52,6 +61,8 @@ export const module = new ContainerModule(({ bind }) => {
         lens: diContainer.get(PluginStart('lens')) as LensPublicStart,
         expressions: diContainer.get(PluginStart('expressions')) as ExpressionsStart,
         uiActions: diContainer.get(PluginStart('uiActions')) as UiActionsStart,
+        share,
+        agentBuilder,
       });
     });
 

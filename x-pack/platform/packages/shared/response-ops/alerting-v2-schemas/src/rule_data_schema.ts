@@ -51,6 +51,11 @@ const metadataSchema = z
       .max(100)
       .optional()
       .describe('Tags for categorization.'),
+    /** Where the rule was first created (Discover vs in-app builder). */
+    source: z
+      .enum(['discover', 'kibana_ui'])
+      .optional()
+      .describe('Creation surface: Discover or Kibana rule builder UI.'),
   })
   .strict()
   .describe('Rule metadata.');

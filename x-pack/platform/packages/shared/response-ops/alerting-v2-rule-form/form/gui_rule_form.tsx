@@ -21,6 +21,7 @@ export interface GuiRuleFormProps {
   onSubmit: (values: FormValues) => void;
   /** Whether to include the ES|QL query editor (default: true) */
   includeQueryEditor?: boolean;
+  formVariant?: 'default' | 'quickEdit';
 }
 
 /**
@@ -35,22 +36,30 @@ export interface GuiRuleFormProps {
  *
  * Requires a FormProvider context with FormValues type to be present in the component tree.
  */
-export const GuiRuleForm = ({ onSubmit, includeQueryEditor = true }: GuiRuleFormProps) => {
+export const GuiRuleForm = ({
+  onSubmit,
+  includeQueryEditor = true,
+  formVariant = 'default',
+}: GuiRuleFormProps) => {
   const { handleSubmit } = useFormContext<FormValues>();
+  const isQuickEdit = formVariant === 'quickEdit';
 
   return (
     <EuiForm id={RULE_FORM_ID} component="form" onSubmit={handleSubmit(onSubmit)}>
       <RuleDetailsFieldGroup />
       <EuiSpacer size="m" />
-      <ConditionFieldGroup includeBase={includeQueryEditor} />
+      <ConditionFieldGroup
+        includeBase={includeQueryEditor}
+        readOnlyQueryLabelEsql={isQuickEdit && !includeQueryEditor}
+      />
       <EuiSpacer size="m" />
       <RuleExecutionFieldGroup />
       <EuiSpacer size="m" />
       <KindField />
       <EuiSpacer size="m" />
-      <AlertConditionsFieldGroup />
+      <AlertConditionsFieldGroup defaultOpen={!isQuickEdit} />
       <EuiSpacer size="m" />
-      <AttachmentRunbookFieldGroup />
+      {isQuickEdit ? null : <AttachmentRunbookFieldGroup />}
     </EuiForm>
   );
 };

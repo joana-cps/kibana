@@ -67,7 +67,7 @@ export const DynamicRuleForm = ({
   cancelLabel,
 }: DynamicRuleFormProps) => {
   // Get default form values derived from the query
-  const formValues = useFormDefaults({ query });
+  const formValues = useFormDefaults({ query, defaultSource: 'discover' });
 
   const methods = useForm<FormValues>({
     mode: 'onBlur',

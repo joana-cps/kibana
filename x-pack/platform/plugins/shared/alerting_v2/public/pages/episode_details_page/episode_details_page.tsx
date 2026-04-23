@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import React, { Suspense, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useMemo, useState } from 'react';
 import {
   EuiAccordion,
   EuiBadge,
@@ -52,7 +52,11 @@ import { css } from '@emotion/react';
 import { useHistory, useParams } from 'react-router-dom';
 import { KibanaPageTemplate } from '@kbn/shared-ux-page-kibana-template';
 import { useFetchRule } from '../../hooks/use_fetch_rule';
+import { useDeleteRule } from '../../hooks/use_delete_rule';
+import { useToggleRuleEnabled } from '../../hooks/use_toggle_rule_enabled';
 import { CenterJustifiedSpinner } from '../../components/center_justified_spinner';
+import { DeleteConfirmationModal } from '../../components/rule/modals/delete_confirmation_modal';
+import { RuleSummaryFlyout } from '../../components/rule/flyouts';
 import { paths } from '../../constants';
 import type { AlertEpisodesKibanaServices } from '../../episodes_kibana_services';
 import { useBreadcrumbs } from '../../hooks/use_breadcrumbs';
@@ -121,8 +125,13 @@ export function EpisodeDetailsPage() {
   const [sidebarPanel, setSidebarPanel] = useState<EpisodeDetailsSidebarPanel>('episode_details');
   const { services } = useKibana<AlertEpisodesKibanaServices>();
   const { euiTheme } = useEuiTheme();
-  const { data, notifications, http, expressions } = services;
+  const { data, notifications, http, expressions, application } = services;
   const history = useHistory();
+
+  const [isRuleSummaryFlyoutOpen, setIsRuleSummaryFlyoutOpen] = useState(false);
+  const [rulePendingDelete, setRulePendingDelete] = useState<RuleResponse | null>(null);
+  const deleteRuleMutation = useDeleteRule();
+  const toggleEnabledMutation = useToggleRuleEnabled();
 
   const {
     data: eventRows = [],
@@ -234,6 +243,18 @@ export function EpisodeDetailsPage() {
       : i18n.translate('xpack.alertingV2.episodeDetails.ruleKindAlerting', {
           defaultMessage: 'Alerting',
         });
+
+  const onConfirmDeleteRule = useCallback(() => {
+    if (!rulePendingDelete) {
+      return;
+    }
+    deleteRuleMutation.mutate(rulePendingDelete.id, {
+      onSettled: () => {
+        setRulePendingDelete(null);
+        setIsRuleSummaryFlyoutOpen(false);
+      },
+    });
+  }, [deleteRuleMutation, rulePendingDelete]);
 
   const isLoading = isLoadingEvents || (Boolean(ruleId) && isLoadingRule);
   const episodeNotFound = !isLoading && eventRows.length === 0;
@@ -455,7 +476,7 @@ export function EpisodeDetailsPage() {
                       size="xs"
                       color="text"
                       iconType="eye"
-                      href={http.basePath.prepend(paths.ruleDetails(rule.id))}
+                      onClick={() => setIsRuleSummaryFlyoutOpen(true)}
                       data-test-subj="alertingV2EpisodeDetailsViewRuleDetailsButton"
                     >
                       {i18n.translate('xpack.alertingV2.episodeDetails.viewRuleDetails', {
@@ -550,37 +571,38 @@ export function EpisodeDetailsPage() {
   );
 
   return (
-    <KibanaPageTemplate
-      paddingSize="none"
-      bottomBorder={false}
-      data-test-subj="alertingV2EpisodeDetailsPage"
-    >
-      {isLoading ? (
-        <KibanaPageTemplate.Section grow>
-          <CenterJustifiedSpinner />
-        </KibanaPageTemplate.Section>
-      ) : (
-        <>
-          <KibanaPageTemplate.Header
-            pageTitle={pageTitle}
-            description={headerDescription}
-            bottomBorder
-            rightSideItems={[
-              <AlertEpisodeActions
-                key="alertingV2EpisodeHeaderActions"
-                episodeId={episodeId}
-                groupHash={groupHash}
-                episodeAction={episodeAction}
-                groupAction={groupAction}
-                http={http}
-                openInDiscoverHref={openInDiscoverHref}
-                expressions={expressions}
-                buttonsOutlined={false}
-              />,
-            ]}
-            rightSideGroupProps={{ gutterSize: 's' }}
-          />
-          <KibanaPageTemplate.Section paddingSize="none" grow>
+    <>
+      <KibanaPageTemplate
+        paddingSize="none"
+        bottomBorder={false}
+        data-test-subj="alertingV2EpisodeDetailsPage"
+      >
+        {isLoading ? (
+          <KibanaPageTemplate.Section grow>
+            <CenterJustifiedSpinner />
+          </KibanaPageTemplate.Section>
+        ) : (
+          <>
+            <KibanaPageTemplate.Header
+              pageTitle={pageTitle}
+              description={headerDescription}
+              bottomBorder
+              rightSideItems={[
+                <AlertEpisodeActions
+                  key="alertingV2EpisodeHeaderActions"
+                  episodeId={episodeId}
+                  groupHash={groupHash}
+                  episodeAction={episodeAction}
+                  groupAction={groupAction}
+                  http={http}
+                  openInDiscoverHref={openInDiscoverHref}
+                  expressions={expressions}
+                  buttonsOutlined={false}
+                />,
+              ]}
+              rightSideGroupProps={{ gutterSize: 's' }}
+            />
+            <KibanaPageTemplate.Section paddingSize="none" grow>
             <EuiSplitPanel.Outer direction="row" hasBorder={false} hasShadow={false} grow>
               <EuiSplitPanel.Inner grow paddingSize="l">
                 <Suspense fallback={<EuiLoadingSpinner size="l" />}>
@@ -681,8 +703,35 @@ export function EpisodeDetailsPage() {
               </EuiSplitPanel.Inner>
             </EuiSplitPanel.Outer>
           </KibanaPageTemplate.Section>
-        </>
-      )}
-    </KibanaPageTemplate>
+          </>
+        )}
+      </KibanaPageTemplate>
+      {rule && isRuleSummaryFlyoutOpen ? (
+        <RuleSummaryFlyout
+          rule={rule}
+          onClose={() => setIsRuleSummaryFlyoutOpen(false)}
+          onEdit={(r) => {
+            setIsRuleSummaryFlyoutOpen(false);
+            application.navigateToUrl(http.basePath.prepend(paths.ruleEdit(r.id)));
+          }}
+          onClone={(r) => {
+            setIsRuleSummaryFlyoutOpen(false);
+            application.navigateToUrl(
+              http.basePath.prepend(`${paths.ruleCreateForm}?cloneFrom=${encodeURIComponent(r.id)}`)
+            );
+          }}
+          onDelete={(r) => setRulePendingDelete(r)}
+          onToggleEnabled={(r) => toggleEnabledMutation.mutate({ id: r.id, enabled: !r.enabled })}
+        />
+      ) : null}
+      {rulePendingDelete ? (
+        <DeleteConfirmationModal
+          ruleName={rulePendingDelete.metadata?.name ?? rulePendingDelete.id}
+          onCancel={() => setRulePendingDelete(null)}
+          onConfirm={onConfirmDeleteRule}
+          isLoading={deleteRuleMutation.isLoading}
+        />
+      ) : null}
+    </>
   );
 }

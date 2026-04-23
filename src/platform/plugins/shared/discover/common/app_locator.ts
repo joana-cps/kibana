@@ -21,6 +21,16 @@ export const DISCOVER_APP_LOCATOR = 'DISCOVER_APP_LOCATOR';
 
 export interface DiscoverAppLocatorParams extends SerializableRecord {
   /**
+   * When true, after Discover loads in ES|QL mode, open the "Create ES|QL rule" (alerting v2) flyout.
+   * Use with a locator navigation `state` payload; requires an ES|QL `query` in the same params.
+   */
+  openCreateEsqlRuleV2Flyout?: boolean;
+  /**
+   * When set with `openCreateEsqlRuleV2Flyout`, opens the flyout in edit mode with this rule id
+   * pre-loaded (for example from alerting quick edit "Edit in Discover").
+   */
+  esqlRuleV2EditRuleId?: string;
+  /**
    * Optionally set saved search ID.
    */
   savedSearchId?: string;
@@ -142,6 +152,8 @@ export interface MainHistoryLocationState {
   dataViewSpec?: DataViewSpec;
   esqlControls?: ControlPanelsState<OptionsListESQLControlState>;
   isAlertResults?: boolean;
+  openCreateEsqlRuleV2Flyout?: boolean;
+  esqlRuleV2EditRuleId?: string;
 }
 
 export type DiscoverAppLocatorGetLocation =

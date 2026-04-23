@@ -90,6 +90,11 @@ export interface ESQLEditorProps {
   enableResourceBrowser?: boolean;
   /** Stats about the last request made */
   queryStats?: ESQLQueryStats;
+  /**
+   * When set, registers a keyboard shortcut (Ctrl/Cmd+Shift+A) and lists it in keyboard shortcuts
+   * help. The host app should open the same flow as its "Create ES|QL rule" action.
+   */
+  onCreateEsqlAlertingRule?: () => void;
 }
 
 interface ESQLVariableService {

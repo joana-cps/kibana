@@ -7,7 +7,7 @@
  * License v3.0 only", or the "Server Side Public License, v 1".
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { i18n } from '@kbn/i18n';
 import {
   useEuiTheme,
@@ -27,52 +27,77 @@ import { isMac } from '@kbn/shared-ux-utility';
 
 const COMMAND_KEY = isMac ? '⌘' : 'CTRL';
 
-const listItems = [
-  {
-    title: (
-      <>
-        <kbd>{COMMAND_KEY}</kbd> <kbd>Enter</kbd>
-      </>
-    ),
-    description: i18n.translate('esqlEditor.query.runKeyboardShortcutsLabel', {
-      defaultMessage: 'Run query',
-    }),
-  },
-  {
-    title: (
-      <>
-        <kbd>{COMMAND_KEY}</kbd> <kbd>/</kbd>
-      </>
-    ),
-    description: i18n.translate('esqlEditor.query.commentKeyboardShortcutsLabel', {
-      defaultMessage: 'Comment/uncomment line',
-    }),
-  },
-  {
-    title: (
-      <>
-        <kbd>{COMMAND_KEY}</kbd> <kbd>K</kbd>
-      </>
-    ),
-    description: i18n.translate('esqlEditor.query.openVisorKeyboardShortcutsLabel', {
-      defaultMessage: 'Open quick search',
-    }),
-  },
-  {
-    title: (
-      <>
-        <kbd>{COMMAND_KEY}</kbd> <kbd>I</kbd>
-      </>
-    ),
-    description: i18n.translate('esqlEditor.query.prettifyKeyboardShortcutsLabel', {
-      defaultMessage: 'Prettify query',
-    }),
-  },
-];
+const createListItems = (showCreateEsqlRule: boolean) => {
+  const base = [
+    {
+      title: (
+        <>
+          <kbd>{COMMAND_KEY}</kbd> <kbd>Enter</kbd>
+        </>
+      ),
+      description: i18n.translate('esqlEditor.query.runKeyboardShortcutsLabel', {
+        defaultMessage: 'Run query',
+      }),
+    },
+    {
+      title: (
+        <>
+          <kbd>{COMMAND_KEY}</kbd> <kbd>/</kbd>
+        </>
+      ),
+      description: i18n.translate('esqlEditor.query.commentKeyboardShortcutsLabel', {
+        defaultMessage: 'Comment/uncomment line',
+      }),
+    },
+    {
+      title: (
+        <>
+          <kbd>{COMMAND_KEY}</kbd> <kbd>K</kbd>
+        </>
+      ),
+      description: i18n.translate('esqlEditor.query.openVisorKeyboardShortcutsLabel', {
+        defaultMessage: 'Open quick search',
+      }),
+    },
+    {
+      title: (
+        <>
+          <kbd>{COMMAND_KEY}</kbd> <kbd>I</kbd>
+        </>
+      ),
+      description: i18n.translate('esqlEditor.query.prettifyKeyboardShortcutsLabel', {
+        defaultMessage: 'Prettify query',
+      }),
+    },
+  ];
 
-export function KeyboardShortcuts() {
+  if (showCreateEsqlRule) {
+    base.push({
+      title: (
+        <>
+          <kbd>{COMMAND_KEY}</kbd> <kbd>Shift</kbd> <kbd>A</kbd>
+        </>
+      ),
+      description: i18n.translate('esqlEditor.query.createEsqlRuleKeyboardShortcutsLabel', {
+        defaultMessage: 'Create ES|QL rule',
+      }),
+    });
+  }
+
+  return base;
+};
+
+export function KeyboardShortcuts({
+  showCreateEsqlRuleKeyboardShortcut = false,
+}: {
+  showCreateEsqlRuleKeyboardShortcut?: boolean;
+}) {
   const euiThemeContext = useEuiTheme();
   const { euiTheme } = euiThemeContext;
+  const listItems = useMemo(
+    () => createListItems(showCreateEsqlRuleKeyboardShortcut),
+    [showCreateEsqlRuleKeyboardShortcut]
+  );
 
   const [isOpen, setIsOpen] = useState(false);
 

@@ -91,6 +91,8 @@ export const parseAppLocatorParams = (params: DiscoverAppLocatorParams) => {
     sampleSize,
     isAlertResults,
     esqlControls,
+    openCreateEsqlRuleV2Flyout,
+    esqlRuleV2EditRuleId,
   } = params;
 
   const appState: Partial<DiscoverAppState> = {};
@@ -122,6 +124,8 @@ export const parseAppLocatorParams = (params: DiscoverAppLocatorParams) => {
   if (dataViewSpec) state.dataViewSpec = dataViewSpec;
   if (isAlertResults) state.isAlertResults = isAlertResults;
   if (esqlControls) state.esqlControls = esqlControls;
+  if (openCreateEsqlRuleV2Flyout) state.openCreateEsqlRuleV2Flyout = true;
+  if (esqlRuleV2EditRuleId) state.esqlRuleV2EditRuleId = esqlRuleV2EditRuleId;
 
   return { appState, globalState, state };
 };

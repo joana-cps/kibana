@@ -5,8 +5,8 @@
  * 2.0.
  */
 
-import React, { useMemo } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import React, { useEffect, useMemo } from 'react';
+import { useForm, FormProvider, useFormState, useWatch } from 'react-hook-form';
 import type { FormValues } from './types';
 import { RuleForm } from './rule_form';
 import type { RuleFormServices, RuleFormLayout } from './contexts';
@@ -43,6 +43,25 @@ export interface StandaloneRuleFormProps {
   initialValues?: Partial<FormValues>;
   /** When provided, the form operates in edit mode and uses PATCH instead of POST on submission. */
   ruleId?: string;
+  /**
+   * When true, shows a reduced set of fields (quick edit): no kind switch, no runbook, alert conditions start collapsed.
+   * Use with `includeQueryEditor` to control ES|QL edit vs read-only.
+   */
+  formVariant?: 'default' | 'quickEdit';
+  /**
+   * Whether the main ES|QL field is editable (default: true). Set false to show read-only for builder-origin rules in quick edit.
+   */
+  includeQueryEditor?: boolean;
+  /**
+   * When the form's dirty state changes (any field value differs from defaults after mount).
+   * Use for custom footers, for example to disable "Apply" until the user has edited the rule.
+   */
+  onDirtyChange?: (isDirty: boolean) => void;
+  /**
+   * When set, called with the current `metadata` object whenever it changes in the form
+   * (for example to drive header actions that depend on `metadata.source`).
+   */
+  onMetadataChange?: (metadata: FormValues['metadata']) => void;
 }
 
 /**
@@ -74,8 +93,16 @@ export const StandaloneRuleForm = ({
   cancelLabel,
   initialValues,
   ruleId,
+  formVariant = 'default',
+  includeQueryEditor = true,
+  onDirtyChange,
+  onMetadataChange,
 }: StandaloneRuleFormProps) => {
-  const queryDefaults = useFormDefaults({ query });
+  const isNew = !ruleId;
+  const queryDefaults = useFormDefaults({
+    query,
+    defaultSource: isNew ? initialValues?.metadata?.source ?? 'kibana_ui' : undefined,
+  });
 
   const defaultValues = useMemo<FormValues>(
     () => ({
@@ -119,6 +146,8 @@ export const StandaloneRuleForm = ({
 
   return (
     <FormProvider {...methods}>
+      {onDirtyChange != null ? <FormDirtySubscriber onDirtyChange={onDirtyChange} /> : null}
+      {onMetadataChange != null ? <MetadataSubscriber onMetadataChange={onMetadataChange} /> : null}
       <RuleForm
         services={services}
         layout={layout}
@@ -132,7 +161,31 @@ export const StandaloneRuleForm = ({
         submitLabel={submitLabel}
         cancelLabel={cancelLabel}
         ruleId={ruleId}
+        formVariant={formVariant}
+        includeQueryEditor={includeQueryEditor}
       />
     </FormProvider>
   );
 };
+
+function FormDirtySubscriber({ onDirtyChange }: { onDirtyChange: (isDirty: boolean) => void }) {
+  const { isDirty } = useFormState<FormValues>();
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty, onDirtyChange]);
+  return null;
+}
+
+function MetadataSubscriber({
+  onMetadataChange,
+}: {
+  onMetadataChange: (metadata: FormValues['metadata']) => void;
+}) {
+  const metadata = useWatch<FormValues, 'metadata'>({ name: 'metadata' });
+  useEffect(() => {
+    if (metadata) {
+      onMetadataChange(metadata);
+    }
+  }, [metadata, onMetadataChange]);
+  return null;
+}

@@ -63,6 +63,7 @@ export function transformCreateRuleBodyToRuleSoAttributes(
       description: data.metadata.description,
       owner: data.metadata.owner,
       tags: data.metadata.tags,
+      ...(data.metadata.source !== undefined ? { source: data.metadata.source } : {}),
     },
     time_field: data.time_field,
     schedule: {
@@ -148,6 +149,7 @@ export function transformRuleSoAttributesToRuleApiResponse(
       description: attrs.metadata.description,
       owner: attrs.metadata.owner,
       tags: attrs.metadata.tags,
+      ...(attrs.metadata.source !== undefined ? { source: attrs.metadata.source } : {}),
     },
     time_field: attrs.time_field,
     schedule: {

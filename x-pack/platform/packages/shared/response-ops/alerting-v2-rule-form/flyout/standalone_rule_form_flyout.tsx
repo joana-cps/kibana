@@ -57,6 +57,7 @@ const StandaloneRuleFormFlyoutInner = ({
         query={query}
         services={services}
         layout="flyout"
+        includeYaml
       />
     </RuleFormFlyout>
   );

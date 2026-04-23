@@ -28,7 +28,12 @@ const NO_TIME_FIELDS_OPTION = {
   value: '',
 };
 
-export const TimeFieldSelect = () => {
+export interface TimeFieldSelectProps {
+  /** Shown under the time field (page evaluation layout). */
+  helpText?: string;
+}
+
+export const TimeFieldSelect = ({ helpText }: TimeFieldSelectProps = {}) => {
   const { http, dataViews } = useRuleFormServices();
   const { layout } = useRuleFormMeta();
   const { control, setValue, getValues } = useFormContext<FormValues>();
@@ -88,9 +93,10 @@ export const TimeFieldSelect = () => {
             })}
             isInvalid={!!error}
             error={error?.message}
+            helpText={helpText}
             fullWidth
           >
-            {/* used eslint-disable-next-line to bypass EUI's isInvalid prop check since we're handling validation via 
+            {/* used eslint-disable-next-line to bypass EUI's isInvalid prop check since we're handling validation via
             react-hook-form to keep the scroll to error and to not disply additional error messages */}
             {/* eslint-disable-next-line @elastic/eui/consistent-is-invalid-props */}
             <EuiSelect

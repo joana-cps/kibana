@@ -18,10 +18,13 @@ describe('KindField', () => {
     expect(screen.getByText('Track active and recovered state over time')).toBeInTheDocument();
   });
 
-  it('renders the description text', () => {
+  it('renders an info icon with accessible description text (not inline body copy)', () => {
     render(<KindField />, { wrapper: createFormWrapper() });
 
-    expect(screen.getByText(/Enables lifecycle management/)).toBeInTheDocument();
+    expect(screen.queryByText(/Enables lifecycle management/)).not.toBeInTheDocument();
+    const info = screen.getByTestId('kindFieldDescriptionInfo');
+    expect(info).toBeInTheDocument();
+    expect(info).toHaveAttribute('aria-label', expect.stringMatching(/Enables lifecycle management/));
   });
 
   it('is checked when kind is alert (default)', () => {

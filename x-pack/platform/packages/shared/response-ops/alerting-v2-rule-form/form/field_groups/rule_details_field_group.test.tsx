@@ -37,10 +37,10 @@ describe('RuleDetailsFieldGroup', () => {
     );
 
     expect(screen.getByText('Tags')).toBeInTheDocument();
-    expect(screen.getByText('optional')).toBeInTheDocument();
+    expect(screen.getAllByText('optional').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders the add description button initially', () => {
+  it('renders the description field with optional label', () => {
     const Wrapper = createFormWrapper();
 
     render(
@@ -48,22 +48,9 @@ describe('RuleDetailsFieldGroup', () => {
         <RuleDetailsFieldGroup />
       </Wrapper>
     );
-
-    expect(screen.getByText('Add description')).toBeInTheDocument();
-  });
-
-  it('renders the description field when add description is clicked', async () => {
-    const Wrapper = createFormWrapper();
-
-    render(
-      <Wrapper>
-        <RuleDetailsFieldGroup />
-      </Wrapper>
-    );
-
-    await userEvent.click(screen.getByText('Add description'));
 
     expect(screen.getByText('Description')).toBeInTheDocument();
+    expect(screen.getByTestId('ruleDescriptionInput')).toBeInTheDocument();
   });
 
   it('does not render enabled or kind fields', () => {

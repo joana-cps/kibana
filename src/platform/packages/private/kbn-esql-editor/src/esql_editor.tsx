@@ -120,6 +120,7 @@ const ESQLEditorInternal = function ESQLEditor({
   hideQuickSearch,
   queryStats,
   enableResourceBrowser = false,
+  onCreateEsqlAlertingRule,
 }: ESQLEditorPropsInternal) {
   const popoverRef = useRef<HTMLDivElement>(null);
   const editorModel = useRef<monaco.editor.ITextModel>();
@@ -717,7 +718,13 @@ const ESQLEditorInternal = function ESQLEditor({
                   });
 
                   // Add editor key bindings
-                  addEditorKeyBindings(editor, onQuerySubmit, onToggleVisor, onPrettifyQuery);
+                  addEditorKeyBindings(
+                    editor,
+                    onQuerySubmit,
+                    onToggleVisor,
+                    onPrettifyQuery,
+                    onCreateEsqlAlertingRule
+                  );
 
                   // Store disposables for cleanup
                   const currentEditor = editorRef.current;
@@ -851,6 +858,7 @@ const ESQLEditorInternal = function ESQLEditor({
         dataErrorsControl={dataErrorsControl}
         starredQueriesService={starredQueriesService}
         queryStats={queryStats}
+        showCreateEsqlRuleKeyboardShortcut={Boolean(onCreateEsqlAlertingRule)}
         {...editorMessages}
         onErrorClick={onErrorClick}
       />

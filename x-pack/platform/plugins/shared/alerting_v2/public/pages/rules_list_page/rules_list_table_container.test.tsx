@@ -50,6 +50,32 @@ jest.mock('../../hooks/use_toggle_rule_enabled', () => ({
   useToggleRuleEnabled: () => mockUseToggleRuleEnabled(),
 }));
 
+jest.mock('./use_rule_list_row_menu_actions', () => ({
+  useRuleListRowMenuActions: () => ({
+    canOpenEditInDiscover: true,
+    canEditWithAi: true,
+    onEditInDiscover: jest.fn(),
+    onEditInBuilder: jest.fn(),
+    onEditWithAiAgent: jest.fn(),
+    onRunRule: jest.fn(),
+    onUpdateApiKey: jest.fn(),
+  }),
+}));
+
+jest.mock('../../components/rule/flyouts', () => {
+  const actual = jest.requireActual('../../components/rule/flyouts');
+  return {
+    ...actual,
+    QuickEditRuleFlyout: ({ ruleId, onClose }: { ruleId: string; onClose: () => void }) => (
+      <div data-test-subj="quickEditRuleFlyout" data-rule-id={ruleId}>
+        <button type="button" onClick={onClose}>
+          close quick
+        </button>
+      </div>
+    ),
+  };
+});
+
 const mockRules = [
   {
     id: 'rule-1',
@@ -110,20 +136,14 @@ describe('RulesListTableContainer', () => {
   });
 
   describe('navigation callbacks', () => {
-    it('navigates to edit page when edit action is clicked', async () => {
+    it('opens the quick edit flyout when quick edit is clicked', async () => {
       renderContainer();
-
-      fireEvent.click(screen.getByTestId('ruleActionsButton-rule-1'));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('editRule-rule-1')).toBeInTheDocument();
-      });
 
       fireEvent.click(screen.getByTestId('editRule-rule-1'));
 
-      expect(mockNavigateToUrl).toHaveBeenCalledWith(
-        '/app/management/alertingV2/rules/edit/rule-1'
-      );
+      const flyout = screen.getByTestId('quickEditRuleFlyout');
+      expect(flyout).toBeInTheDocument();
+      expect(flyout).toHaveAttribute('data-rule-id', 'rule-1');
     });
 
     it('navigates to clone page when clone action is clicked', async () => {
@@ -138,7 +158,7 @@ describe('RulesListTableContainer', () => {
       fireEvent.click(screen.getByTestId('cloneRule-rule-1'));
 
       expect(mockNavigateToUrl).toHaveBeenCalledWith(
-        '/app/management/alertingV2/rules/create?cloneFrom=rule-1'
+        '/app/management/alertingV2/rules/create/form?cloneFrom=rule-1'
       );
     });
   });

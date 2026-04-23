@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { I18nProvider } from '@kbn/i18n-react';
 import { QueryClient, QueryClientProvider } from '@kbn/react-query';
 import { MemoryRouter } from 'react-router-dom';
@@ -33,11 +33,26 @@ jest.mock('@kbn/alerting-v2-rule-form', () => {
 });
 
 const mockNavigateToUrl = jest.fn();
+const mockNavigateToApp = jest.fn();
+const mockGetLocation = jest.fn().mockResolvedValue({
+  app: 'discover',
+  path: '#/',
+  state: { openCreateEsqlRuleV2Flyout: true, esqlRuleV2EditRuleId: 'rule-1' },
+});
 const mockGetUrlForApp = jest.fn((appId: string, options?: { path?: string }) => {
   const path = options?.path ?? '';
   return `/app/${appId}${path}`;
 });
 const mockDocTitleChange = jest.fn();
+
+jest.mock('../rules_list_page/use_rule_list_creation_actions', () => ({
+  useRuleListCreationActions: () => ({
+    canCreateInDiscover: true,
+    canCreateWithAi: false,
+    openCreateInDiscover: jest.fn(),
+    openCreateWithAiAgent: jest.fn(),
+  }),
+}));
 
 jest.mock('../../application/breadcrumb_context', () => ({
   useSetBreadcrumbs: () => jest.fn(),
@@ -49,13 +64,26 @@ jest.mock('@kbn/core-di-browser', () => ({
       return { basePath: { prepend: (p: string) => p } };
     }
     if (token === 'application') {
-      return { navigateToUrl: mockNavigateToUrl, getUrlForApp: mockGetUrlForApp };
+      return {
+        navigateToUrl: mockNavigateToUrl,
+        navigateToApp: mockNavigateToApp,
+        getUrlForApp: mockGetUrlForApp,
+      };
     }
     if (token === 'chrome') {
       return { docTitle: { change: mockDocTitleChange } };
     }
     if (token === 'data') {
       return { search: { search: jest.fn() } };
+    }
+    if (token === 'share') {
+      return {
+        url: {
+          locators: {
+            get: () => ({ getLocation: mockGetLocation }),
+          },
+        },
+      };
     }
     return {};
   },
@@ -74,9 +102,9 @@ const createQueryClient = () =>
 const renderCreatePage = () => {
   return render(
     <QueryClientProvider client={createQueryClient()}>
-      <MemoryRouter initialEntries={['/create']}>
+      <MemoryRouter initialEntries={['/create/form']}>
         <I18nProvider>
-          <Route path="/create">
+          <Route path="/create/form">
             <RuleFormPage />
           </Route>
         </I18nProvider>
@@ -102,9 +130,9 @@ const renderEditPage = (ruleId: string = 'rule-1') => {
 const renderClonePage = (sourceRuleId: string = 'rule-1') => {
   return render(
     <QueryClientProvider client={createQueryClient()}>
-      <MemoryRouter initialEntries={[`/create?cloneFrom=${sourceRuleId}`]}>
+      <MemoryRouter initialEntries={[`/create/form?cloneFrom=${sourceRuleId}`]}>
         <I18nProvider>
-          <Route path="/create">
+          <Route path="/create/form">
             <RuleFormPage />
           </Route>
         </I18nProvider>
@@ -117,6 +145,11 @@ describe('RuleFormPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     capturedStandaloneProps = {};
+    mockGetLocation.mockResolvedValue({
+      app: 'discover',
+      path: '#/',
+      state: { openCreateEsqlRuleV2Flyout: true, esqlRuleV2EditRuleId: 'rule-1' },
+    });
   });
 
   describe('create mode', () => {
@@ -124,6 +157,12 @@ describe('RuleFormPage', () => {
       renderCreatePage();
 
       expect(screen.getByRole('heading', { name: 'Create rule' })).toBeInTheDocument();
+    });
+
+    it('does not show Create in Discover (edit-only action)', () => {
+      renderCreatePage();
+
+      expect(screen.queryByTestId('ruleFormPageCreateInDiscoverButton')).not.toBeInTheDocument();
     });
 
     it('renders StandaloneRuleForm', () => {
@@ -277,6 +316,94 @@ describe('RuleFormPage', () => {
       expect(screen.getByText('Edit rule')).toBeInTheDocument();
     });
 
+    it('shows Create in Discover in the header for builder-origin rules', () => {
+      mockUseFetchRule.mockReturnValue({
+        data: {
+          id: 'rule-1',
+          kind: 'alert',
+          enabled: true,
+          metadata: { name: 'Test Rule', source: 'kibana_ui' },
+          time_field: '@timestamp',
+          schedule: { every: '1m', lookback: '5m' },
+          evaluation: { query: { base: 'FROM my-index | LIMIT 1' } },
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      renderEditPage();
+
+      expect(screen.getByTestId('ruleFormPageCreateInDiscoverButton')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Create in Discover' })
+      ).toBeInTheDocument();
+    });
+
+    it('shows Edit in Discover in the header for discover-origin rules', () => {
+      mockUseFetchRule.mockReturnValue({
+        data: {
+          id: 'rule-1',
+          kind: 'alert',
+          enabled: true,
+          metadata: { name: 'Test Rule', source: 'discover' },
+          time_field: '@timestamp',
+          schedule: { every: '1m', lookback: '5m' },
+          evaluation: { query: { base: 'FROM my-index | LIMIT 1' } },
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      renderEditPage();
+
+      expect(screen.getByTestId('ruleFormPageEditInDiscoverButton')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Edit in Discover' })
+      ).toBeInTheDocument();
+    });
+
+    it('opens Discover with the ES|QL rule flyout in edit mode when Create in Discover is clicked', async () => {
+      mockUseFetchRule.mockReturnValue({
+        data: {
+          id: 'rule-1',
+          kind: 'alert',
+          enabled: true,
+          metadata: { name: 'Test Rule' },
+          time_field: '@timestamp',
+          schedule: { every: '1m', lookback: '5m' },
+          evaluation: { query: { base: 'FROM my-index | LIMIT 1' } },
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      renderEditPage();
+
+      fireEvent.click(screen.getByTestId('ruleFormPageCreateInDiscoverButton'));
+
+      await waitFor(() => {
+        expect(mockNavigateToApp).toHaveBeenCalled();
+      });
+
+      expect(mockGetLocation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: { esql: 'FROM my-index | LIMIT 1' },
+          openCreateEsqlRuleV2Flyout: true,
+          esqlRuleV2EditRuleId: 'rule-1',
+        })
+      );
+      expect(mockNavigateToApp).toHaveBeenCalledWith(
+        'discover',
+        expect.objectContaining({
+          path: '#/',
+          state: { openCreateEsqlRuleV2Flyout: true, esqlRuleV2EditRuleId: 'rule-1' },
+        })
+      );
+    });
+
     it('passes ruleId to StandaloneRuleForm', () => {
       mockUseFetchRule.mockReturnValue({
         data: {
@@ -427,6 +554,27 @@ describe('RuleFormPage', () => {
       renderClonePage();
 
       expect(screen.getByRole('heading', { name: 'Create rule' })).toBeInTheDocument();
+    });
+
+    it('does not show Create in Discover in clone mode', () => {
+      mockUseFetchRule.mockReturnValue({
+        data: {
+          id: 'rule-1',
+          kind: 'alert',
+          enabled: true,
+          metadata: { name: 'Source Rule' },
+          time_field: '@timestamp',
+          schedule: { every: '1m', lookback: '5m' },
+          evaluation: { query: { base: 'FROM logs-* | LIMIT 1' } },
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      renderClonePage();
+
+      expect(screen.queryByTestId('ruleFormPageCreateInDiscoverButton')).not.toBeInTheDocument();
     });
 
     it('does not pass ruleId to StandaloneRuleForm (creates a new rule)', () => {

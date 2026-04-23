@@ -5,10 +5,7 @@
  * 2.0.
  */
 
-import { EuiButtonEmpty, EuiPageHeader, EuiSpacer } from '@elastic/eui';
-import { i18n } from '@kbn/i18n';
-import { FormattedMessage } from '@kbn/i18n-react';
-import { CoreStart, useService } from '@kbn/core-di-browser';
+import { EuiPageHeader, EuiSpacer } from '@elastic/eui';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { RuleDetailsActionsMenu } from './rule_details_actions_menu';
@@ -18,12 +15,10 @@ import { DeleteConfirmationModal } from '../rule/modals/delete_confirmation_moda
 import { RuleHeaderDescription, RuleTitleWithBadges } from './rule_header_description';
 import { RuleSidebar } from './sidebar/rule_sidebar';
 import { useRule } from './rule_context';
-import { paths } from '../../constants';
 
 export const RuleDetailPage: React.FunctionComponent = () => {
   const rule = useRule();
   useBreadcrumbs('rule_details', { ruleName: rule.metadata?.name });
-  const { basePath } = useService(CoreStart('http'));
 
   const history = useHistory();
   const { mutate: deleteRule, isLoading: isDeleting } = useDeleteRule();
@@ -53,22 +48,6 @@ export const RuleDetailPage: React.FunctionComponent = () => {
             key="actions"
             showDeleteConfirmation={showDeleteConfirmationModal}
           />,
-          <EuiButtonEmpty
-            aria-label={i18n.translate(
-              'xpack.alertingV2.sections.ruleDetails.editRuleButtonLabel',
-              { defaultMessage: 'Edit Rule' }
-            )}
-            data-test-subj="openEditRuleFlyoutButton"
-            color="text"
-            iconType="pencil"
-            name="edit"
-            href={basePath.prepend(paths.ruleEdit(rule.id))}
-          >
-            <FormattedMessage
-              id="xpack.alertingV2.sections.ruleDetails.editRuleButtonLabel"
-              defaultMessage="Edit Rule"
-            />
-          </EuiButtonEmpty>,
         ]}
       />
 

@@ -12,8 +12,10 @@ import { DataViewType, type DataView, type DataViewSpec } from '@kbn/data-views-
 import {
   DiscoverFlyouts,
   dismissAllFlyoutsExceptFor,
+  dismissFlyouts,
   prepareDataViewForEditing,
 } from '@kbn/discover-utils';
+import { useGetRuleTypesPermissions, type RuleTypeWithDescription } from '@kbn/alerts-ui-shared';
 import type { ESQLEditorRestorableState } from '@kbn/esql-editor';
 import { useESQLQueryStats } from '@kbn/esql/public';
 import { type Query, type TimeRange, type AggregateQuery } from '@kbn/es-query';
@@ -40,10 +42,12 @@ import {
   useInternalStateDispatch,
   useInternalStateGetState,
   useInternalStateSelector,
+  useInternalStateSubscribe,
 } from '../../state_management/redux';
 import { DiscoverTopNavMenu } from './discover_topnav_menu';
 import { ESQLToDataViewTransitionModal } from './esql_dataview_transition';
 import { DiscoverSessionSaveModalContainer } from './save_discover_session';
+import { CreateESQLRuleFlyout } from './app_menu_actions/create_esql_rule_flyout';
 import {
   isDiscoverInspectorInTabMenu,
   useDiscoverTopNavWithInspector,
@@ -137,6 +141,7 @@ export const DiscoverTopNav = ({
 }: DiscoverTopNavProps) => {
   const dispatch = useInternalStateDispatch();
   const getState = useInternalStateGetState();
+  const subscribe = useInternalStateSubscribe();
   const currentTabId = useCurrentTabSelector((tab) => tab.id);
   const services = useDiscoverServices();
   const { dataViewEditor, navigation, dataViewFieldEditor, data } = services;
@@ -144,6 +149,7 @@ export const DiscoverTopNav = ({
   const [controlGroupApi, setControlGroupApi] = useState<ControlGroupRendererApi | undefined>();
   const [isSaveModalVisible, setIsSaveModalVisible] = useState(false);
   const [initialCopyOnSave, setInitialCopyOnSave] = useState(false);
+  const [isCreateEsqlRuleFlyoutOpen, setIsCreateEsqlRuleFlyoutOpen] = useState(false);
 
   const onSaveCbRef = useRef<(() => void) | undefined>(undefined);
 
@@ -163,6 +169,33 @@ export const DiscoverTopNav = ({
     (state) => state.persistedDiscoverSession
   );
   const isEsqlMode = useIsEsqlMode();
+  const { authorizedRuleTypes } = useGetRuleTypesPermissions({
+    http: services.http,
+    toasts: services.notifications.toasts,
+  });
+  const authorizedRuleTypeIds = useMemo(
+    () =>
+      authorizedRuleTypes
+        .filter((ruleType: RuleTypeWithDescription) =>
+          Object.values(ruleType.authorizedConsumers).some((consumer) => consumer.all)
+        )
+        .map((ruleType) => ruleType.id),
+    [authorizedRuleTypes]
+  );
+  const showCreateEsqlRuleShortcut =
+    isEsqlMode &&
+    !!services.capabilities.alertingVTwo &&
+    !!services.triggersActionsUi &&
+    authorizedRuleTypeIds.length > 0;
+
+  const onCreateEsqlAlertingRule = useCallback(() => {
+    if (!showCreateEsqlRuleShortcut) {
+      return;
+    }
+    dismissFlyouts();
+    setIsCreateEsqlRuleFlyoutOpen(true);
+  }, [showCreateEsqlRuleShortcut]);
+
   const showDatePicker = useMemo(() => {
     // always show the timepicker for ES|QL mode
     return (
@@ -496,7 +529,17 @@ export const DiscoverTopNav = ({
         }
         esqlQueryStats={esqlQueryStats}
         onOpenQueryInNewTab={onOpenQueryInNewTab}
+        onCreateEsqlAlertingRule={showCreateEsqlRuleShortcut ? onCreateEsqlAlertingRule : undefined}
       />
+      {isCreateEsqlRuleFlyoutOpen && (
+        <CreateESQLRuleFlyout
+          services={services}
+          tabId={currentTabId}
+          getState={getState}
+          subscribe={subscribe}
+          onClose={() => setIsCreateEsqlRuleFlyoutOpen(false)}
+        />
+      )}
       {isESQLToDataViewTransitionModalVisible && (
         <ESQLToDataViewTransitionModal onClose={onESQLToDataViewTransitionModalClose} />
       )}

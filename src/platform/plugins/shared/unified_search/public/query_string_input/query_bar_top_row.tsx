@@ -246,6 +246,10 @@ export interface QueryBarTopRowProps<QT extends Query | AggregateQuery = Query> 
    * Optional ES|QL prop - Callback function invoked to open the given ES|QL query in a new Discover tab
    */
   onOpenQueryInNewTab?: ESQLEditorProps['onOpenQueryInNewTab'];
+  /**
+   * Optional ES|QL prop - Registers editor shortcut to create an alerting rule from the current query
+   */
+  onCreateEsqlAlertingRule?: ESQLEditorProps['onCreateEsqlAlertingRule'];
   onESQLDocsFlyoutVisibilityChanged?: (isOpen: boolean) => void;
   /**
    * Optional ES|QL prop - Enable data source browser in ESQL editor
@@ -1211,6 +1215,7 @@ export const QueryBarTopRow = React.memo(
             }
             esqlVariables={props.esqlVariablesConfig?.esqlVariables ?? []}
             onOpenQueryInNewTab={props.onOpenQueryInNewTab}
+            onCreateEsqlAlertingRule={props.onCreateEsqlAlertingRule}
             queryStats={props.esqlQueryStats}
             enableResourceBrowser={props.enableResourceBrowser}
           />

@@ -28,6 +28,8 @@ export interface SubmissionButtonsProps {
   submitLabel?: React.ReactNode;
   cancelLabel?: React.ReactNode;
   ruleId?: string;
+  /** When false, hides the "Show request" action (e.g. quick edit flyout). Default: true. */
+  showRequestButton?: boolean;
 }
 
 export const SubmissionButtons = ({
@@ -36,6 +38,7 @@ export const SubmissionButtons = ({
   submitLabel,
   cancelLabel,
   ruleId,
+  showRequestButton = true,
 }: SubmissionButtonsProps) => {
   const [isShowRequestVisible, setIsShowRequestVisible] = useState(false);
 
@@ -66,29 +69,42 @@ export const SubmissionButtons = ({
           </EuiFlexItem>
         )}
         <EuiFlexItem grow={false}>
-          <EuiFlexGroup gutterSize="m">
-            <EuiFlexItem grow={false}>
-              <EuiButtonEmpty
-                onClick={onShowRequest}
-                isDisabled={isSubmitting}
-                data-test-subj="ruleV2FormShowRequestButton"
-              >
-                {SHOW_REQUEST_LABEL}
-              </EuiButtonEmpty>
-            </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiButton
-                type="submit"
-                form={RULE_FORM_ID}
-                isLoading={isSubmitting}
-                fill
-                iconType="plusInCircle"
-                data-test-subj="ruleV2FormSubmitButton"
-              >
-                {submitLabel ?? defaultSubmitLabel}
-              </EuiButton>
-            </EuiFlexItem>
-          </EuiFlexGroup>
+          {showRequestButton ? (
+            <EuiFlexGroup gutterSize="m">
+              <EuiFlexItem grow={false}>
+                <EuiButtonEmpty
+                  onClick={onShowRequest}
+                  isDisabled={isSubmitting}
+                  data-test-subj="ruleV2FormShowRequestButton"
+                >
+                  {SHOW_REQUEST_LABEL}
+                </EuiButtonEmpty>
+              </EuiFlexItem>
+              <EuiFlexItem grow={false}>
+                <EuiButton
+                  type="submit"
+                  form={RULE_FORM_ID}
+                  isLoading={isSubmitting}
+                  fill
+                  iconType="plusInCircle"
+                  data-test-subj="ruleV2FormSubmitButton"
+                >
+                  {submitLabel ?? defaultSubmitLabel}
+                </EuiButton>
+              </EuiFlexItem>
+            </EuiFlexGroup>
+          ) : (
+            <EuiButton
+              type="submit"
+              form={RULE_FORM_ID}
+              isLoading={isSubmitting}
+              fill
+              iconType="plusInCircle"
+              data-test-subj="ruleV2FormSubmitButton"
+            >
+              {submitLabel ?? defaultSubmitLabel}
+            </EuiButton>
+          )}
         </EuiFlexItem>
       </EuiFlexGroup>
       {isShowRequestVisible && <ShowRequestModal ruleId={ruleId} onClose={onCloseShowRequest} />}

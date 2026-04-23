@@ -11,6 +11,7 @@ import { i18n } from '@kbn/i18n';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { FormValues } from '../types';
 import { useRuleFormMeta } from '../contexts';
+import { RuleSummaryQueryPanel } from './rule_summary_query_panel';
 import { RuleResultsPreview } from './rule_results_preview';
 import { RecoveryResultsPreview } from './recovery_results_preview';
 
@@ -31,6 +32,8 @@ export const RulePreviewPanel = () => {
   if (layout === 'page') {
     return (
       <>
+        <RuleSummaryQueryPanel />
+        <EuiSpacer size="m" />
         <RuleResultsPreview />
         {showRecoveryPreview && (
           <>

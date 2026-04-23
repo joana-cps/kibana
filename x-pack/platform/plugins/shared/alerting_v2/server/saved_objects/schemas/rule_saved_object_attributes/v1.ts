@@ -24,6 +24,9 @@ export const ruleSavedObjectAttributesSchema = schema.object({
     description: schema.maybe(schema.string()),
     owner: schema.maybe(schema.string()),
     tags: schema.maybe(schema.arrayOf(schema.string(), { minSize: 1, maxSize: 100 })),
+    source: schema.maybe(
+      schema.oneOf([schema.literal('discover'), schema.literal('kibana_ui')])
+    ),
   }),
   time_field: schema.string(),
   schedule: schema.object({

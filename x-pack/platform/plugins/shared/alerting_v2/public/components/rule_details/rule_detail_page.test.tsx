@@ -109,15 +109,6 @@ describe('RuleDetailPage', () => {
     expect(screen.getByTestId('ruleConditionsSection')).toBeInTheDocument();
     expect(screen.getByTestId('ruleMetadataSection')).toBeInTheDocument();
     expect(screen.getByTestId('ruleDetailsActionsButton')).toBeInTheDocument();
-    expect(screen.getByTestId('openEditRuleFlyoutButton')).toBeInTheDocument();
-  });
-
-  it('renders edit button with correct href', () => {
-    renderPage(baseRule);
-    expect(screen.getByTestId('openEditRuleFlyoutButton')).toHaveAttribute(
-      'href',
-      '/app/management/alertingV2/rules/edit/rule-1'
-    );
   });
 
   it('opens delete confirmation from actions menu', () => {

@@ -13,6 +13,8 @@ import { useDefaultGroupBy } from './use_default_group_by';
 interface UseFormDefaultsProps {
   /** The ES|QL query to derive defaults from */
   query: string;
+  /** Set on new rules from Discover vs in-app create flows. */
+  defaultSource?: 'discover' | 'kibana_ui';
 }
 
 /**
@@ -28,7 +30,7 @@ interface UseFormDefaultsProps {
  * Note: timeField defaults to '@timestamp' which is the most common time field.
  * TimeFieldSelect may update this if @timestamp is not available in the query results.
  */
-export const useFormDefaults = ({ query }: UseFormDefaultsProps): FormValues => {
+export const useFormDefaults = ({ query, defaultSource }: UseFormDefaultsProps): FormValues => {
   const { defaultGroupBy } = useDefaultGroupBy({ query });
 
   return useMemo(
@@ -38,6 +40,7 @@ export const useFormDefaults = ({ query }: UseFormDefaultsProps): FormValues => 
         name: '',
         enabled: true,
         description: '',
+        ...(defaultSource !== undefined ? { source: defaultSource } : {}),
       },
       timeField: '@timestamp', // Default to @timestamp; TimeFieldSelect may update if not available
       schedule: {
@@ -60,6 +63,6 @@ export const useFormDefaults = ({ query }: UseFormDefaultsProps): FormValues => 
       stateTransitionAlertDelayMode: DELAY_MODE.immediate,
       stateTransitionRecoveryDelayMode: DELAY_MODE.immediate,
     }),
-    [query, defaultGroupBy]
+    [query, defaultGroupBy, defaultSource]
   );
 };

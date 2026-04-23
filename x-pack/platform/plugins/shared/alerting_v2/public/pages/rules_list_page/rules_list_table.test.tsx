@@ -382,15 +382,9 @@ describe('RulesListTable', () => {
   });
 
   describe('row actions menu', () => {
-    it('calls onEdit when edit action is clicked', async () => {
+    it('calls onEdit when quick edit is clicked', async () => {
       const onEdit = jest.fn();
       renderTable({ onEdit });
-
-      fireEvent.click(screen.getByTestId('ruleActionsButton-rule-1'));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('editRule-rule-1')).toBeInTheDocument();
-      });
 
       fireEvent.click(screen.getByTestId('editRule-rule-1'));
 

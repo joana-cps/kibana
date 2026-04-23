@@ -48,10 +48,10 @@ export const RuleResultsPreview = () => (
   </Suspense>
 );
 
-export type { FormValues, StateTransitionDelayMode } from './types';
+export type { FormValues, StateTransitionDelayMode, RuleCreationSource } from './types';
 export type { DynamicRuleFormProps } from './dynamic_rule_form';
 export type { StandaloneRuleFormProps } from './standalone_rule_form';
-export type { RuleFormServices, RuleFormMeta, RuleFormLayout } from './contexts';
+export type { RuleFormServices, RuleFormMeta, RuleFormLayout, RuleFormVariant } from './contexts';
 export { RuleFormProvider, useRuleFormServices, useRuleFormMeta } from './contexts';
 export {
   deriveAlertDelayModeFromStateTransition,
@@ -62,3 +62,4 @@ export {
   mapRuleResponseToFormValues,
 } from './utils/rule_request_mappers';
 export type { RuleRequestCommon } from './utils/rule_request_mappers';
+export { useUpdateRule } from './hooks/use_update_rule';
